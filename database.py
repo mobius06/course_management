@@ -52,10 +52,7 @@ class Database:
     def verify_password(self, stored_password, provided_password):
         """Verify a password against its hash"""
         try:
-            print(f"Stored password: {stored_password}")
-            print(f"Provided password: {provided_password}")
             expected = f'salt${provided_password}'
-            print(f"Expected password: {expected}")
             return stored_password == expected
         except Exception as e:
             print(f"Error in verify_password: {str(e)}")
