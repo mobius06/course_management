@@ -19,110 +19,38 @@ class CourseManagementSystem:
     def setup_login_frame(self):
         # Create and configure the main frame
         self.login_frame = ttk.Frame(self.root, padding="20")
-        self.login_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.login_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+        # Create a container frame for centering
+        container = ttk.Frame(self.login_frame)
+        container.grid(row=0, column=0, padx=20, pady=20)
+
+        # Title
+        title_label = ttk.Label(container, text="Course Management System", font=('Helvetica', 16, 'bold'))
+        title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
 
         # Username
-        ttk.Label(self.login_frame, text="Username:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(container, text="Username:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.username_var = tk.StringVar()
-        self.username_entry = ttk.Entry(self.login_frame, textvariable=self.username_var)
-        self.username_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+        self.username_entry = ttk.Entry(container, textvariable=self.username_var, width=30)
+        self.username_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
 
         # Password
-        ttk.Label(self.login_frame, text="Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(container, text="Password:").grid(row=2, column=0, sticky=tk.W, pady=5)
         self.password_var = tk.StringVar()
-        self.password_entry = ttk.Entry(self.login_frame, textvariable=self.password_var, show="*")
-        self.password_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
-
-        # Role selection
-        ttk.Label(self.login_frame, text="Role:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.role_var = tk.StringVar(value="student")
-        role_combo = ttk.Combobox(self.login_frame, textvariable=self.role_var)
-        role_combo['values'] = ('student', 'teacher', 'admin')
-        role_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+        self.password_entry = ttk.Entry(container, textvariable=self.password_var, show="*", width=30)
+        self.password_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
 
         # Login button
-        login_button = ttk.Button(self.login_frame, text="Login", command=self.login)
+        login_button = ttk.Button(container, text="Login", command=self.login, width=20)
         login_button.grid(row=3, column=0, columnspan=2, pady=20)
 
-        # Register button
-        register_button = ttk.Button(self.login_frame, text="Register", command=self.show_register_dialog)
-        register_button.grid(row=4, column=0, columnspan=2, pady=10)
-
         # Configure grid weights
-        self.login_frame.columnconfigure(1, weight=1)
-
-    def show_register_dialog(self):
-        # Create dialog window
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Register New User")
-        dialog.geometry("300x250")
-        dialog.transient(self.root)
-        dialog.grab_set()
-
-        # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
-        form_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Username
-        ttk.Label(form_frame, text="Username:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        username_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=username_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
-
-        # Password
-        ttk.Label(form_frame, text="Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        password_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=password_var, show="*").grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
-
-        # Confirm Password
-        ttk.Label(form_frame, text="Confirm Password:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        confirm_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=confirm_var, show="*").grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
-
-        # Role selection
-        ttk.Label(form_frame, text="Role:").grid(row=3, column=0, sticky=tk.W, pady=5)
-        role_var = tk.StringVar(value="student")
-        role_combo = ttk.Combobox(form_frame, textvariable=role_var)
-        role_combo['values'] = ('student', 'teacher', 'admin')
-        role_combo.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5)
-
-        def register():
-            username = username_var.get().strip()
-            password = password_var.get()
-            confirm = confirm_var.get()
-            role = role_var.get()
-
-            if not username or not password:
-                messagebox.showerror("Error", "Please fill in all fields")
-                return
-
-            if password != confirm:
-                messagebox.showerror("Error", "Passwords do not match")
-                return
-
-            try:
-                # Check if username already exists
-                if self.db.get_user(username):
-                    messagebox.showerror("Error", "Username already exists")
-                    return
-
-                # Create new user
-                self.db.create_user(username, password, role)
-                messagebox.showinfo("Success", "Registration successful! Please login.")
-                dialog.destroy()
-            except Exception as e:
-                messagebox.showerror("Error", f"Registration failed: {str(e)}")
-
-        # Register button
-        register_btn = ttk.Button(form_frame, text="Register", command=register)
-        register_btn.grid(row=4, column=0, columnspan=2, pady=20)
-
-        # Configure grid weights
-        form_frame.columnconfigure(1, weight=1)
+        container.columnconfigure(1, weight=1)
 
     def login(self):
         username = self.username_var.get().strip()
         password = self.password_var.get()
-        role = self.role_var.get()
 
         if not username or not password:
             messagebox.showerror("Error", "Please enter both username and password")
@@ -134,21 +62,20 @@ class CourseManagementSystem:
             messagebox.showerror("Error", "Invalid username or password")
             return
 
-        if user[2] != role:  # user[2] is the role field
-            messagebox.showerror("Error", "Selected role does not match user's role")
-            return
-
+        print(f"Authenticated user: {user}")
         self.current_user = {
             'user_id': user[0],
             'username': user[1],
-            'role': user[2]
+            'role': user[3]  # Changed from user[2] to user[3] for role
         }
+        print(f"Current user data: {self.current_user}")
 
         # Clear login frame and show appropriate interface
         self.login_frame.destroy()
         self.show_main_interface()
 
     def show_main_interface(self):
+        print(f"Showing interface for role: {self.current_user['role']}")
         # Create main interface based on user role
         if self.current_user['role'] == 'student':
             self.show_student_interface()

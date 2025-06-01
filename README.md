@@ -1,20 +1,23 @@
 # Course Management System
 
-A Python-based course management system with a GUI interface, built using tkinter and PostgreSQL.
+A web-based course management system built with Python Flask and PostgreSQL, designed for educational institutions to manage courses, students, teachers, and enrollments.
 
 ## Features
 
-- User Authentication (Admin, Teacher, Student roles)
-- Course Management
-- User Management
-- Course Enrollment
-- Course Offerings Management
+- User authentication with role-based access (Admin, Teacher, Student)
+- Department management
+- Course management with ECTS credits and course types
+- Semester management
+- Course offering management
+- Student enrollment system
+- Teacher assignment to courses
+- Student grade tracking
 
 ## Prerequisites
 
-- Python 3.x
-- PostgreSQL
-- Required Python packages (listed in requirements.txt)
+- Python 3.8 or higher
+- PostgreSQL 12 or higher
+- pip (Python package manager)
 
 ## Installation
 
@@ -24,77 +27,119 @@ git clone <repository-url>
 cd course_management
 ```
 
-2. Install required packages:
+2. Create a virtual environment and activate it:
+```bash
+# On Windows
+python -m venv venv
+venv\Scripts\activate
+
+# On macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. Install the required Python packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up PostgreSQL database:
-   - Create a new database named 'course_management'
-   - Run the SQL commands in `database_setup.sql` to create the necessary tables
+4. Set up the PostgreSQL database:
+```bash
+# Connect to PostgreSQL
+psql -U postgres
 
-4. Configure the database connection:
-   - Open `config.py`
-   - Update the DB_CONFIG with your PostgreSQL credentials:
-```python
-DB_CONFIG = {
-    'dbname': 'course_management',
-    'user': 'your_username',
-    'password': 'your_password',
-    'host': 'localhost',
-    'port': '5432'
-}
+# Create the database and user
+CREATE DATABASE course_management_new;
+CREATE USER your_username WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE course_management_new TO your_username;
+\q
+
+# Run the database setup script
+psql -d course_management_new -f database_setup_new.sql
 ```
+
+5. Configure the application:
+   - Copy `.env.example` to `.env`
+   - Update the database connection settings in `.env`:
+     ```
+     DATABASE_URL=postgresql://your_username:your_password@localhost:5432/course_management_new
+     SECRET_KEY=your_secret_key
+     ```
 
 ## Running the Application
 
+1. Start the Flask development server:
 ```bash
-python main.py
+flask run
 ```
 
-## Default Test Accounts
+2. Access the application at `http://localhost:5000`
 
-### Admin
-- Username: `admin`
-- Password: `admin123`
-- Role: admin
+## Default Users
 
-### Teachers
-- Username: `teacher1`, Password: `teacher1_pass`
-- Username: `teacher2`, Password: `teacher2_pass`
-- Username: `teacher3`, Password: `teacher3_pass`
-- Username: `teacher4`, Password: `teacher4_pass`
+The system comes with the following default users:
 
-### Students
-- Username: `student1`, Password: `student1_pass`
-- Username: `student2`, Password: `student2_pass`
-- Username: `student3`, Password: `student3_pass`
+1. Admin:
+   - Username: `admin`
+   - Password: `password123`
 
-## Project Structure
+2. Teachers:
+   - Username: `teacher1`, Password: `password123`
+   - Username: `teacher2`, Password: `password123`
 
-- `main.py`: Main application entry point
-- `database.py`: Database connection and operations
-- `config.py`: Configuration settings
-- `gui/`: GUI components
-  - `student_interface.py`: Student interface
-  - `teacher_interface.py`: Teacher interface
-  - `course_management.py`: Course management interface
-  - `user_management.py`: User management interface
+3. Students:
+   - Username: `student1`, Password: `password123`
+   - Username: `student2`, Password: `password123`
 
-## Features by Role
+## Database Structure
 
-### Admin
-- Full user management
-- Full course management
-- System-wide access
+The database consists of the following main tables:
 
-### Teacher
-- View teaching courses
-- Manage course offerings
-- Add/Edit/Delete course offerings
+- `department`: Stores department information
+- `course`: Stores course details including credits and ECTS
+- `semester`: Manages academic semesters
+- `user`: Stores user accounts with role-based access
+- `teacher`: Stores teacher information
+- `student`: Stores student information
+- `course_offering`: Manages course offerings for each semester
+- `enrolls_in`: Tracks student enrollments in courses
 
-### Student
-- View available courses
-- View enrolled courses
-- Enroll in courses
-- Drop courses 
+## Sample Data
+
+The system comes with sample data including:
+- 4 departments (Computer Science, Electrical Engineering, Mechanical Engineering, Mathematics)
+- 3 semesters (Fall 2024, Spring 2025, Summer 2025)
+- 5 courses in Computer Science
+- 2 teachers and 2 students
+- Course offerings and enrollments
+
+To view the sample data, run:
+```bash
+psql -d course_management_new -f view_data.sql
+```
+
+## Security Notes
+
+- The default passwords are for testing purposes only
+- In a production environment:
+  - Change all default passwords
+  - Use strong, unique passwords
+  - Enable HTTPS
+  - Set up proper user authentication
+  - Implement password reset functionality
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please open an issue in the repository or contact the maintainers. 

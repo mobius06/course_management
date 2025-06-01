@@ -32,153 +32,149 @@ class StudentInterface(ttk.Frame):
         self.setup_enrolled_courses_tab()
 
     def setup_available_courses_tab(self):
-        # Create buttons frame
-        buttons_frame = ttk.Frame(self.available_courses_tab)
-        buttons_frame.pack(fill=tk.X, pady=(0, 10))
-
-        # Refresh button
-        refresh_btn = ttk.Button(
-            buttons_frame,
-            text="Refresh",
-            command=self.refresh_available_courses
-        )
-        refresh_btn.pack(side=tk.LEFT, padx=5)
-
         # Create Treeview for available courses
         columns = ('course_id', 'course_name', 'course_code', 'credits', 'ects', 'level', 'type', 'department')
-        self.available_courses_tree = ttk.Treeview(
+        self.available_tree = ttk.Treeview(
             self.available_courses_tab,
             columns=columns,
             show='headings'
         )
 
         # Define headings
-        self.available_courses_tree.heading('course_id', text='ID')
-        self.available_courses_tree.heading('course_name', text='Course Name')
-        self.available_courses_tree.heading('course_code', text='Course Code')
-        self.available_courses_tree.heading('credits', text='Credits')
-        self.available_courses_tree.heading('ects', text='ECTS')
-        self.available_courses_tree.heading('level', text='Level')
-        self.available_courses_tree.heading('type', text='Type')
-        self.available_courses_tree.heading('department', text='Department')
+        self.available_tree.heading('course_id', text='ID')
+        self.available_tree.heading('course_name', text='Course Name')
+        self.available_tree.heading('course_code', text='Course Code')
+        self.available_tree.heading('credits', text='Credits')
+        self.available_tree.heading('ects', text='ECTS')
+        self.available_tree.heading('level', text='Level')
+        self.available_tree.heading('type', text='Type')
+        self.available_tree.heading('department', text='Department')
 
         # Define columns
-        self.available_courses_tree.column('course_id', width=50)
-        self.available_courses_tree.column('course_name', width=200)
-        self.available_courses_tree.column('course_code', width=100)
-        self.available_courses_tree.column('credits', width=70)
-        self.available_courses_tree.column('ects', width=70)
-        self.available_courses_tree.column('level', width=100)
-        self.available_courses_tree.column('type', width=100)
-        self.available_courses_tree.column('department', width=150)
+        self.available_tree.column('course_id', width=50)
+        self.available_tree.column('course_name', width=200)
+        self.available_tree.column('course_code', width=100)
+        self.available_tree.column('credits', width=70)
+        self.available_tree.column('ects', width=70)
+        self.available_tree.column('level', width=100)
+        self.available_tree.column('type', width=150)
+        self.available_tree.column('department', width=150)
 
         # Add scrollbar
-        scrollbar = ttk.Scrollbar(self.available_courses_tab, orient=tk.VERTICAL, command=self.available_courses_tree.yview)
-        self.available_courses_tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar = ttk.Scrollbar(self.available_courses_tab, orient=tk.VERTICAL, command=self.available_tree.yview)
+        self.available_tree.configure(yscrollcommand=scrollbar.set)
 
         # Pack tree and scrollbar
-        self.available_courses_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.available_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Bind double-click event
-        self.available_courses_tree.bind('<Double-1>', self.on_available_course_select)
+        self.available_tree.bind('<Double-1>', self.on_available_course_select)
 
         # Load initial data
         self.refresh_available_courses()
 
     def setup_enrolled_courses_tab(self):
-        # Create buttons frame
-        buttons_frame = ttk.Frame(self.enrolled_courses_tab)
-        buttons_frame.pack(fill=tk.X, pady=(0, 10))
-
-        # Refresh button
-        refresh_btn = ttk.Button(
-            buttons_frame,
-            text="Refresh",
-            command=self.refresh_enrolled_courses
-        )
-        refresh_btn.pack(side=tk.LEFT, padx=5)
-
         # Create Treeview for enrolled courses
-        columns = ('course_id', 'course_name', 'course_code', 'credits', 'ects', 'level', 'type', 'department')
-        self.enrolled_courses_tree = ttk.Treeview(
+        columns = ('course_id', 'course_name', 'course_code', 'credits', 'ects', 'level', 'type', 'department', 'semester', 'year')
+        self.enrolled_tree = ttk.Treeview(
             self.enrolled_courses_tab,
             columns=columns,
             show='headings'
         )
 
         # Define headings
-        self.enrolled_courses_tree.heading('course_id', text='ID')
-        self.enrolled_courses_tree.heading('course_name', text='Course Name')
-        self.enrolled_courses_tree.heading('course_code', text='Course Code')
-        self.enrolled_courses_tree.heading('credits', text='Credits')
-        self.enrolled_courses_tree.heading('ects', text='ECTS')
-        self.enrolled_courses_tree.heading('level', text='Level')
-        self.enrolled_courses_tree.heading('type', text='Type')
-        self.enrolled_courses_tree.heading('department', text='Department')
+        self.enrolled_tree.heading('course_id', text='ID')
+        self.enrolled_tree.heading('course_name', text='Course Name')
+        self.enrolled_tree.heading('course_code', text='Course Code')
+        self.enrolled_tree.heading('credits', text='Credits')
+        self.enrolled_tree.heading('ects', text='ECTS')
+        self.enrolled_tree.heading('level', text='Level')
+        self.enrolled_tree.heading('type', text='Type')
+        self.enrolled_tree.heading('department', text='Department')
+        self.enrolled_tree.heading('semester', text='Semester')
+        self.enrolled_tree.heading('year', text='Year')
 
         # Define columns
-        self.enrolled_courses_tree.column('course_id', width=50)
-        self.enrolled_courses_tree.column('course_name', width=200)
-        self.enrolled_courses_tree.column('course_code', width=100)
-        self.enrolled_courses_tree.column('credits', width=70)
-        self.enrolled_courses_tree.column('ects', width=70)
-        self.enrolled_courses_tree.column('level', width=100)
-        self.enrolled_courses_tree.column('type', width=100)
-        self.enrolled_courses_tree.column('department', width=150)
+        self.enrolled_tree.column('course_id', width=50)
+        self.enrolled_tree.column('course_name', width=200)
+        self.enrolled_tree.column('course_code', width=100)
+        self.enrolled_tree.column('credits', width=70)
+        self.enrolled_tree.column('ects', width=70)
+        self.enrolled_tree.column('level', width=100)
+        self.enrolled_tree.column('type', width=150)
+        self.enrolled_tree.column('department', width=150)
+        self.enrolled_tree.column('semester', width=150)
+        self.enrolled_tree.column('year', width=100)
 
         # Add scrollbar
-        scrollbar = ttk.Scrollbar(self.enrolled_courses_tab, orient=tk.VERTICAL, command=self.enrolled_courses_tree.yview)
-        self.enrolled_courses_tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar = ttk.Scrollbar(self.enrolled_courses_tab, orient=tk.VERTICAL, command=self.enrolled_tree.yview)
+        self.enrolled_tree.configure(yscrollcommand=scrollbar.set)
 
         # Pack tree and scrollbar
-        self.enrolled_courses_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.enrolled_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Bind double-click event
-        self.enrolled_courses_tree.bind('<Double-1>', self.on_enrolled_course_select)
+        self.enrolled_tree.bind('<Double-1>', self.on_enrolled_course_select)
 
         # Load initial data
         self.refresh_enrolled_courses()
 
     def refresh_available_courses(self):
         # Clear existing items
-        for item in self.available_courses_tree.get_children():
-            self.available_courses_tree.delete(item)
+        for item in self.available_tree.get_children():
+            self.available_tree.delete(item)
+
+        # Get student ID
+        student = self.db.get_student(self.user['user_id'])
+        if not student:
+            return
+
+        # Get current semester
+        current_semester = self.db.get_current_semester()
+        if not current_semester:
+            messagebox.showerror("Error", "No active semester found")
+            return
 
         # Fetch and display available courses
         courses = self.db.get_all_courses()
-        enrolled_courses = self.db.get_student_courses(self.user['user_id'])
+        enrolled_courses = self.db.get_student_courses(student[0])  # student[0] is student_id
         enrolled_course_ids = {course[0] for course in enrolled_courses}
 
         for course in courses:
             if course[0] not in enrolled_course_ids:
-                self.available_courses_tree.insert('', tk.END, values=course)
+                self.available_tree.insert('', tk.END, values=course)
 
     def refresh_enrolled_courses(self):
         # Clear existing items
-        for item in self.enrolled_courses_tree.get_children():
-            self.enrolled_courses_tree.delete(item)
+        for item in self.enrolled_tree.get_children():
+            self.enrolled_tree.delete(item)
+
+        # Get student ID
+        student = self.db.get_student(self.user['user_id'])
+        if not student:
+            return
 
         # Fetch and display enrolled courses
-        courses = self.db.get_student_courses(self.user['user_id'])
+        courses = self.db.get_student_courses(student[0])  # student[0] is student_id
         for course in courses:
-            self.enrolled_courses_tree.insert('', tk.END, values=course)
+            self.enrolled_tree.insert('', tk.END, values=course)
 
     def on_available_course_select(self, event):
         # Get selected item
-        item = self.available_courses_tree.selection()[0]
-        course_id = self.available_courses_tree.item(item)['values'][0]
+        item = self.available_tree.selection()[0]
+        course_id = self.available_tree.item(item)['values'][0]
         
-        # Show course details and enrollment dialog
+        # Show course enrollment dialog
         self.show_course_enrollment_dialog(course_id)
 
     def on_enrolled_course_select(self, event):
         # Get selected item
-        item = self.enrolled_courses_tree.selection()[0]
-        course_id = self.enrolled_courses_tree.item(item)['values'][0]
+        item = self.enrolled_tree.selection()[0]
+        course_id = self.enrolled_tree.item(item)['values'][0]
         
-        # Show course details dialog
+        # Show course details
         self.show_course_details(course_id)
 
     def show_course_enrollment_dialog(self, course_id):
@@ -203,7 +199,7 @@ class StudentInterface(ttk.Frame):
         # Display course details
         row = 0
         for label, value in zip(
-            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type'],
+            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department'],
             course
         ):
             ttk.Label(details_frame, text=f"{label}:").grid(row=row, column=0, sticky=tk.W, pady=5)
@@ -240,7 +236,7 @@ class StudentInterface(ttk.Frame):
         # Display course details
         row = 0
         for label, value in zip(
-            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type'],
+            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department'],
             course
         ):
             ttk.Label(details_frame, text=f"{label}:").grid(row=row, column=0, sticky=tk.W, pady=5)
@@ -257,19 +253,41 @@ class StudentInterface(ttk.Frame):
 
     def enroll_in_course(self, course_id, dialog):
         try:
-            self.db.enroll_student(self.user['user_id'], course_id)
-            messagebox.showinfo("Success", "Successfully enrolled in course!")
-            dialog.destroy()
-            self.refresh_available_courses()
-            self.refresh_enrolled_courses()
+            # Get student ID
+            student = self.db.get_student(self.user['user_id'])
+            if not student:
+                messagebox.showerror("Error", "Student not found")
+                return
+
+            # Check if already enrolled
+            if self.db.is_student_enrolled(student[0], course_id):
+                messagebox.showerror("Error", "Already enrolled in this course")
+                return
+
+            # Enroll student
+            success, message = self.db.enroll_student(student[0], course_id)
+            if success:
+                messagebox.showinfo("Success", message)
+                dialog.destroy()
+                # Refresh both course lists
+                self.refresh_available_courses()
+                self.refresh_enrolled_courses()
+            else:
+                messagebox.showerror("Error", message)
         except Exception as e:
             messagebox.showerror("Error", f"Failed to enroll in course: {str(e)}")
 
     def drop_course(self, course_id, dialog):
         if messagebox.askyesno("Confirm Drop", "Are you sure you want to drop this course?"):
             try:
+                # Get student ID
+                student = self.db.get_student(self.user['user_id'])
+                if not student:
+                    messagebox.showerror("Error", "Student not found")
+                    return
+
                 query = "DELETE FROM enrolls_in WHERE user_id = %s AND course_id = %s"
-                self.db.execute_query(query, (self.user['user_id'], course_id))
+                self.db.execute_query(query, (student[0], course_id))
                 messagebox.showinfo("Success", "Successfully dropped course!")
                 dialog.destroy()
                 self.refresh_available_courses()

@@ -76,13 +76,18 @@ class UserManagementFrame(ttk.Frame):
         # Fetch and display users
         users = self.db.get_all_users()
         for user in users:
-            self.tree.insert('', tk.END, values=user)
+            user_data = list(user)  # Convert tuple to list for modification
+            # Format role
+            user_data[2] = user_data[2].capitalize() if user_data[2] else "N/A"
+            # Format datetime
+            user_data[3] = user_data[3].strftime("%Y-%m-%d %H:%M:%S") if user_data[3] else "N/A"
+            self.tree.insert('', tk.END, values=user_data)
 
     def show_add_user_dialog(self):
         # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Add New User")
-        dialog.geometry("300x200")
+        dialog.geometry("400x500")
         dialog.transient(self)
         dialog.grab_set()
 
@@ -95,30 +100,43 @@ class UserManagementFrame(ttk.Frame):
         username_var = tk.StringVar()
         ttk.Entry(form_frame, textvariable=username_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
 
-        # Role selection
-        ttk.Label(form_frame, text="Role:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        role_var = tk.StringVar(value="student")
+        # Password
+        ttk.Label(form_frame, text="Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        password_var = tk.StringVar()
+        ttk.Entry(form_frame, textvariable=password_var, show="*").grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Role
+        ttk.Label(form_frame, text="Role:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        role_var = tk.StringVar()
         role_combo = ttk.Combobox(form_frame, textvariable=role_var)
-        role_combo['values'] = ('student', 'teacher', 'admin')
-        role_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+        role_combo['values'] = ('admin', 'teacher', 'student')
+        role_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
 
         def save_user():
             try:
-                # Insert user
-                query = "INSERT INTO \"user\" (username, role) VALUES (%s, %s)"
-                self.db.execute_query(query, (
+                # Validate required fields
+                if not all([username_var.get(), password_var.get(), role_var.get()]):
+                    messagebox.showerror("Error", "Please fill in all fields")
+                    return
+
+                # Create user
+                success = self.db.create_user(
                     username_var.get(),
+                    password_var.get(),
                     role_var.get()
-                ))
-                messagebox.showinfo("Success", "User added successfully!")
-                dialog.destroy()
-                self.refresh_users()
+                )
+                if success:
+                    messagebox.showinfo("Success", "User added successfully!")
+                    dialog.destroy()
+                    self.refresh_users()
+                else:
+                    messagebox.showerror("Error", "Failed to add user")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to add user: {str(e)}")
 
         # Save button
         save_btn = ttk.Button(form_frame, text="Save", command=save_user)
-        save_btn.grid(row=2, column=0, columnspan=2, pady=20)
+        save_btn.grid(row=3, column=0, columnspan=2, pady=20)
 
         # Configure grid weights
         form_frame.columnconfigure(1, weight=1)
@@ -167,7 +185,7 @@ class UserManagementFrame(ttk.Frame):
         edit_btn = ttk.Button(
             buttons_frame,
             text="Edit",
-            command=lambda: self.edit_user(user_id, dialog)
+            command=lambda: self.edit_user(user_id)
         )
         edit_btn.pack(side=tk.LEFT, padx=5)
 
@@ -178,59 +196,76 @@ class UserManagementFrame(ttk.Frame):
         )
         delete_btn.pack(side=tk.LEFT, padx=5)
 
-    def edit_user(self, user_id, dialog):
-        # Create dialog window
-        edit_dialog = tk.Toplevel(dialog)
-        edit_dialog.title("Edit User")
-        edit_dialog.geometry("300x200")
-        edit_dialog.transient(dialog)
-        edit_dialog.grab_set()
+    def edit_user(self, user_id):
+        try:
+            # Get user data
+            user = self.db.get_user_by_id(user_id)
+            if not user:
+                messagebox.showerror("Error", "User not found")
+                return
 
-        # Get user details
-        user = self.db.get_user_by_id(user_id)
-        if not user:
-            messagebox.showerror("Error", "User not found")
-            edit_dialog.destroy()
-            return
+            # Create dialog window
+            dialog = tk.Toplevel(self)
+            dialog.title("Edit User")
+            dialog.geometry("400x500")
+            dialog.transient(self)
+            dialog.grab_set()
 
-        # Create form
-        form_frame = ttk.Frame(edit_dialog, padding="20")
-        form_frame.pack(fill=tk.BOTH, expand=True)
+            # Create form
+            form_frame = ttk.Frame(dialog, padding="20")
+            form_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Username
-        ttk.Label(form_frame, text="Username:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        username_var = tk.StringVar(value=user[1])
-        ttk.Entry(form_frame, textvariable=username_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+            # Username
+            ttk.Label(form_frame, text="Username:").grid(row=0, column=0, sticky=tk.W, pady=5)
+            username_var = tk.StringVar(value=user[1])
+            ttk.Entry(form_frame, textvariable=username_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
 
-        # Role selection
-        ttk.Label(form_frame, text="Role:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        role_var = tk.StringVar(value=user[2])
-        role_combo = ttk.Combobox(form_frame, textvariable=role_var)
-        role_combo['values'] = ('student', 'teacher', 'admin')
-        role_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+            # Password
+            ttk.Label(form_frame, text="New Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
+            password_var = tk.StringVar()
+            ttk.Entry(form_frame, textvariable=password_var, show="*").grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
 
-        def save_changes():
-            try:
-                # Update user
-                query = "UPDATE \"user\" SET username = %s, role = %s WHERE user_id = %s"
-                self.db.execute_query(query, (
-                    username_var.get(),
-                    role_var.get(),
-                    user_id
-                ))
-                messagebox.showinfo("Success", "User updated successfully!")
-                edit_dialog.destroy()
-                dialog.destroy()
-                self.refresh_users()
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to update user: {str(e)}")
+            # Role
+            ttk.Label(form_frame, text="Role:").grid(row=2, column=0, sticky=tk.W, pady=5)
+            role_var = tk.StringVar(value=user[3])
+            role_combo = ttk.Combobox(form_frame, textvariable=role_var)
+            role_combo['values'] = ('admin', 'teacher', 'student')
+            role_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
 
-        # Save button
-        save_btn = ttk.Button(form_frame, text="Save Changes", command=save_changes)
-        save_btn.grid(row=2, column=0, columnspan=2, pady=20)
+            def save_changes():
+                try:
+                    # Validate required fields
+                    if not all([username_var.get(), role_var.get()]):
+                        messagebox.showerror("Error", "Please fill in all required fields")
+                        return
 
-        # Configure grid weights
-        form_frame.columnconfigure(1, weight=1)
+                    # Update user
+                    success = self.db.update_user(
+                        user_id,
+                        username_var.get(),
+                        password_var.get() if password_var.get() else None,
+                        role_var.get()
+                    )
+                    if success:
+                        messagebox.showinfo("Success", "User updated successfully!")
+                        dialog.destroy()
+                        self.refresh_users()
+                    else:
+                        messagebox.showerror("Error", "Failed to update user")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to update user: {str(e)}")
+
+            # Save button
+            save_btn = ttk.Button(form_frame, text="Save Changes", command=save_changes)
+            save_btn.grid(row=3, column=0, columnspan=2, pady=20)
+
+            # Configure grid weights
+            form_frame.columnconfigure(1, weight=1)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to edit user: {str(e)}")
+            # Ensure UI remains responsive
+            self.after(100, self.refresh_users)
 
     def delete_user(self, user_id, dialog):
         if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this user?"):
