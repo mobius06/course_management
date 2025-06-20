@@ -173,13 +173,13 @@ class Database:
         """
         return self.fetch_one(query, (user_id,))
 
-    def create_student(self, user_id, student_number, first_name, last_name, email, department_id):
+    def create_student(self, user_id, student_number, first_name, last_name, email, department_id, level):
         query = """
-        INSERT INTO student (user_id, student_number, first_name, last_name, email, department_id)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO student (user_id, student_number, first_name, last_name, email, department_id, level)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING student_id
         """
-        return self.fetch_one(query, (user_id, student_number, first_name, last_name, email, department_id))
+        return self.fetch_one(query, (user_id, student_number, first_name, last_name, email, department_id, level))
 
     # Teacher operations
     def get_teacher(self, user_id):
@@ -262,14 +262,14 @@ class Database:
         """Get courses enrolled by a student with proper semester and year information"""
         query = """
         SELECT c.course_id, c.course_name, c.course_code, c.credits, c.ects, 
-               c.level, c.type, d.department_name, s.semester_name, co.year
+               c.level, c.type, d.department_name, s.semester_name, s.year
         FROM course c 
         JOIN enrolls_in e ON c.course_id = e.course_id 
         JOIN department d ON c.department_id = d.department_id
         JOIN course_offering co ON c.course_id = co.course_id
         JOIN semester s ON co.semester_id = s.semester_id
         WHERE e.student_id = %s
-        ORDER BY co.year DESC, s.semester_name
+        ORDER BY s.year DESC, s.semester_name
         """
         return self.fetch_all(query, (student_id,))
 
@@ -310,17 +310,20 @@ class Database:
             if self.is_student_enrolled(student_id, course_id):
                 return False, "Already enrolled in this course"
 
-            # Check if course is available for enrollment
+            # Check if course is available for enrollment and not in a previous semester
             query = """
-            SELECT co.offering_id 
+            SELECT co.offering_id, s.end_date
             FROM course_offering co
             JOIN semester s ON co.semester_id = s.semester_id
-            WHERE co.course_id = %s 
-            AND s.start_date <= CURRENT_DATE 
-            AND s.end_date >= CURRENT_DATE
+            WHERE co.course_id = %s
             """
-            if not self.fetch_one(query, (course_id,)):
+            result = self.fetch_one(query, (course_id,))
+            if not result:
                 return False, "Course is not available for enrollment"
+            _, semester_end_date = result
+            from datetime import date
+            if semester_end_date < date.today():
+                return False, "Cannot enroll in previous semester courses."
 
             # Perform enrollment
             enroll_query = "INSERT INTO enrolls_in (student_id, course_id) VALUES (%s, %s)"
@@ -337,7 +340,7 @@ class Database:
     def get_course_offerings(self, semester_id=None):
         """Get course offerings with department names and instructor name"""
         query = """
-        SELECT co.offering_id, c.course_name, c.course_code, s.semester_name, co.year, d.department_name, u.first_name || ' ' || u.last_name as instructor_name
+        SELECT co.offering_id, c.course_name, c.course_code, s.semester_name, s.year, d.department_name, u.first_name || ' ' || u.last_name as instructor_name
         FROM course_offering co
         JOIN course c ON co.course_id = c.course_id
         JOIN semester s ON co.semester_id = s.semester_id
@@ -354,17 +357,17 @@ class Database:
         """Get courses taught by a teacher with department names"""
         query = """
         SELECT co.offering_id, c.course_name, c.course_code, 
-               s.semester_name, co.year, d.department_name
+               s.semester_name, s.year, d.department_name
         FROM course_offering co
         JOIN course c ON co.course_id = c.course_id
         JOIN semester s ON co.semester_id = s.semester_id
         JOIN department d ON c.department_id = d.department_id
         WHERE co.instructor_id = %s
-        ORDER BY co.year DESC, s.semester_name
+        ORDER BY s.year DESC, s.semester_name
         """
         return self.fetch_all(query, (teacher_id,))
 
-    def create_course_offering(self, course_id, semester_id, instructor_id, year):
+    def create_course_offering(self, course_id, semester_id, instructor_id):
         # Check that the teacher is from the same department as the course
         teacher_dept = self.fetch_one("SELECT department_id FROM teacher WHERE teacher_id = %s", (instructor_id,))
         course_dept = self.fetch_one("SELECT department_id FROM course WHERE course_id = %s", (course_id,))
@@ -375,19 +378,19 @@ class Database:
         if exists:
             raise Exception("This course is already offered by another teacher in this semester.")
         query = """
-        INSERT INTO course_offering (course_id, semester_id, instructor_id, year)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO course_offering (course_id, semester_id, instructor_id)
+        VALUES (%s, %s, %s)
         RETURNING offering_id
         """
-        return self.fetch_one(query, (course_id, semester_id, instructor_id, year))
+        return self.fetch_one(query, (course_id, semester_id, instructor_id))
 
-    def update_course_offering(self, offering_id, course_id, semester_id, instructor_id, year):
+    def update_course_offering(self, offering_id, course_id, semester_id, instructor_id):
         query = """
         UPDATE course_offering 
-        SET course_id = %s, semester_id = %s, instructor_id = %s, year = %s
+        SET course_id = %s, semester_id = %s, instructor_id = %s
         WHERE offering_id = %s
         """
-        return self.execute_query(query, (course_id, semester_id, instructor_id, year, offering_id))
+        return self.execute_query(query, (course_id, semester_id, instructor_id, offering_id))
 
     def update_user_password(self, user_id, new_password):
         query = "UPDATE \"user\" SET password = %s WHERE user_id = %s"

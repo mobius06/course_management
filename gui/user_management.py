@@ -129,6 +129,11 @@ class UserManagementFrame(ttk.Frame):
         student_number_var = tk.StringVar()
         student_number_label = ttk.Label(form_frame, text="Student Number:")
         student_number_entry = ttk.Entry(form_frame, textvariable=student_number_var)
+        # Level (student only)
+        level_var = tk.StringVar()
+        level_label = ttk.Label(form_frame, text="Level:")
+        level_combo = ttk.Combobox(form_frame, textvariable=level_var)
+        level_combo['values'] = ('Bachelor', 'Master')
         # Email (student/teacher)
         email_var = tk.StringVar()
         email_label = ttk.Label(form_frame, text="Email:")
@@ -148,6 +153,8 @@ class UserManagementFrame(ttk.Frame):
             last_name_entry.grid_remove()
             student_number_label.grid_remove()
             student_number_entry.grid_remove()
+            level_label.grid_remove()
+            level_combo.grid_remove()
             email_label.grid_remove()
             email_entry.grid_remove()
             department_label.grid_remove()
@@ -159,10 +166,12 @@ class UserManagementFrame(ttk.Frame):
                 last_name_entry.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=5)
                 student_number_label.grid(row=5, column=0, sticky=tk.W, pady=5)
                 student_number_entry.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=5)
-                email_label.grid(row=6, column=0, sticky=tk.W, pady=5)
-                email_entry.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=5)
-                department_label.grid(row=7, column=0, sticky=tk.W, pady=5)
-                department_combo.grid(row=7, column=1, sticky=(tk.W, tk.E), pady=5)
+                level_label.grid(row=6, column=0, sticky=tk.W, pady=5)
+                level_combo.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=5)
+                email_label.grid(row=7, column=0, sticky=tk.W, pady=5)
+                email_entry.grid(row=7, column=1, sticky=(tk.W, tk.E), pady=5)
+                department_label.grid(row=8, column=0, sticky=tk.W, pady=5)
+                department_combo.grid(row=8, column=1, sticky=(tk.W, tk.E), pady=5)
             elif role_var.get() == 'teacher':
                 first_name_label.grid(row=3, column=0, sticky=tk.W, pady=5)
                 first_name_entry.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5)
@@ -184,8 +193,8 @@ class UserManagementFrame(ttk.Frame):
                 role = role_var.get()
                 # Extra validation for student/teacher
                 if role == 'student':
-                    if not all([first_name_var.get(), last_name_var.get(), student_number_var.get(), email_var.get(), department_var.get()]):
-                        messagebox.showerror("Error", "Please fill in all student fields")
+                    if not all([first_name_var.get(), last_name_var.get(), student_number_var.get(), level_var.get(), email_var.get(), department_var.get()]):
+                        messagebox.showerror("Error", "Please fill in all student fields (including level)")
                         return
                 elif role == 'teacher':
                     if not all([first_name_var.get(), last_name_var.get(), email_var.get(), department_var.get()]):
@@ -237,7 +246,8 @@ class UserManagementFrame(ttk.Frame):
                         first_name_var.get(),
                         last_name_var.get(),
                         email_var.get(),
-                        dept_id
+                        dept_id,
+                        level_var.get()
                     )
                 elif role == 'teacher':
                     dept_id = next(dept[0] for dept in departments if dept[1] == department_var.get())
