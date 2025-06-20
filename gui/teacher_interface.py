@@ -388,7 +388,7 @@ class TeacherInterface(ttk.Frame):
         department_id = teacher[3]  # department_id
         department_name = self.db.get_department_name(department_id)
         # Create form
-        form_frame = ttk.Frame(dialog, padding="24 18 24 18", font=("Helvetica", 11))
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18")
         form_frame.pack(fill=tk.BOTH, expand=True)
         # Course Name
         ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
@@ -506,7 +506,7 @@ class TeacherInterface(ttk.Frame):
         department_id = teacher[3]  # department_id
         department_name = self.db.get_department_name(department_id)
         # Create form
-        form_frame = ttk.Frame(dialog, padding="24 18 24 18", font=("Helvetica", 11))
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18")
         form_frame.pack(fill=tk.BOTH, expand=True)
         # Course Name
         ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
@@ -599,7 +599,7 @@ class TeacherInterface(ttk.Frame):
         department_name = self.db.get_department_name(department_id)
 
         # Create form
-        form_frame = ttk.Frame(dialog, padding="24 18 24 18", font=("Helvetica", 11))
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18")
         form_frame.pack(fill=tk.BOTH, expand=True)
 
         # Course Name

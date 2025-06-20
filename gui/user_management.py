@@ -127,15 +127,22 @@ class UserManagementFrame(ttk.Frame):
         role_combo['values'] = ('admin', 'teacher', 'student')
         role_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
-        # Extra fields for student/teacher
-        # First Name
+        # First Name (always visible)
         first_name_var = tk.StringVar()
         first_name_label = ttk.Label(form_frame, text="First Name:")
         first_name_entry = ttk.Entry(form_frame, textvariable=first_name_var)
-        # Last Name
+        first_name_label.grid(row=3, column=0, sticky=tk.W, pady=8, padx=4)
+        first_name_entry.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+        # Last Name (always visible)
         last_name_var = tk.StringVar()
         last_name_label = ttk.Label(form_frame, text="Last Name:")
         last_name_entry = ttk.Entry(form_frame, textvariable=last_name_var)
+        last_name_label.grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
+        last_name_entry.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+
+        # Track section label for student/teacher
+        section_label = tk.Label(form_frame)  # placeholder, will be replaced
+
         # Student Number (student only)
         student_number_var = tk.StringVar()
         student_number_label = ttk.Label(form_frame, text="Student Number:")
@@ -157,11 +164,7 @@ class UserManagementFrame(ttk.Frame):
         department_combo['values'] = [dept[1] for dept in departments]
 
         def update_extra_fields(*args):
-            # Remove all extra fields first
-            first_name_label.grid_remove()
-            first_name_entry.grid_remove()
-            last_name_label.grid_remove()
-            last_name_entry.grid_remove()
+            # Remove only extra fields first
             student_number_label.grid_remove()
             student_number_entry.grid_remove()
             level_label.grid_remove()
@@ -170,13 +173,14 @@ class UserManagementFrame(ttk.Frame):
             email_entry.grid_remove()
             department_label.grid_remove()
             department_combo.grid_remove()
+            # Remove section label if present
+            try:
+                section_label.grid_remove()
+            except Exception:
+                pass
             if role_var.get() == 'student':
-                # Section header
-                ttk.Label(form_frame, text="Student Details", font=("Helvetica", 11, "bold")).grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(16, 4))
-                first_name_label.grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
-                first_name_entry.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
-                last_name_label.grid(row=5, column=0, sticky=tk.W, pady=8, padx=4)
-                last_name_entry.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+                section_label.config(text="Student Details", font=("Helvetica", 11, "bold"))
+                section_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=(16, 4))
                 student_number_label.grid(row=6, column=0, sticky=tk.W, pady=8, padx=4)
                 student_number_entry.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
                 level_label.grid(row=7, column=0, sticky=tk.W, pady=8, padx=4)
@@ -186,11 +190,8 @@ class UserManagementFrame(ttk.Frame):
                 department_label.grid(row=9, column=0, sticky=tk.W, pady=8, padx=4)
                 department_combo.grid(row=9, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
             elif role_var.get() == 'teacher':
-                ttk.Label(form_frame, text="Teacher Details", font=("Helvetica", 11, "bold")).grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(16, 4))
-                first_name_label.grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
-                first_name_entry.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
-                last_name_label.grid(row=5, column=0, sticky=tk.W, pady=8, padx=4)
-                last_name_entry.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+                section_label.config(text="Teacher Details", font=("Helvetica", 11, "bold"))
+                section_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=(16, 4))
                 email_label.grid(row=6, column=0, sticky=tk.W, pady=8, padx=4)
                 email_entry.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
                 department_label.grid(row=7, column=0, sticky=tk.W, pady=8, padx=4)
@@ -204,16 +205,16 @@ class UserManagementFrame(ttk.Frame):
 
         def save():
             # Validate required fields
-            if not username_var.get() or not password_var.get() or not role_var.get():
+            if not username_var.get() or not password_var.get() or not role_var.get() or not first_name_var.get() or not last_name_var.get():
                 messagebox.showerror("Error", "Please fill in all required fields", parent=dialog)
                 return
             # For student/teacher, check extra fields
             if role_var.get() == 'student':
-                if not all([first_name_var.get(), last_name_var.get(), student_number_var.get(), level_var.get(), email_var.get(), department_var.get()]):
+                if not all([student_number_var.get(), level_var.get(), email_var.get(), department_var.get()]):
                     messagebox.showerror("Error", "Please fill in all student fields", parent=dialog)
                     return
             elif role_var.get() == 'teacher':
-                if not all([first_name_var.get(), last_name_var.get(), email_var.get(), department_var.get()]):
+                if not all([email_var.get(), department_var.get()]):
                     messagebox.showerror("Error", "Please fill in all teacher fields", parent=dialog)
                     return
             # Create user in DB
@@ -221,20 +222,25 @@ class UserManagementFrame(ttk.Frame):
                 username_var.get(),
                 password_var.get(),
                 role_var.get(),
-                first_name_var.get() if role_var.get() in ('student', 'teacher') else None,
-                last_name_var.get() if role_var.get() in ('student', 'teacher') else None
+                first_name_var.get(),
+                last_name_var.get()
             )
             if not success:
                 messagebox.showerror("Error", "Failed to create user. Username may already exist.", parent=dialog)
                 return
-            # If student/teacher, add to respective table
-            user_id = self.db.get_user(username_var.get())[0]
-            if role_var.get() == 'student':
-                dept_id = next(dept[0] for dept in departments if dept[1] == department_var.get())
-                self.db.create_student(user_id, student_number_var.get(), first_name_var.get(), last_name_var.get(), email_var.get(), dept_id, level_var.get())
-            elif role_var.get() == 'teacher':
-                dept_id = next(dept[0] for dept in departments if dept[1] == department_var.get())
-                self.db.create_teacher(user_id, first_name_var.get(), last_name_var.get(), email_var.get(), dept_id)
+            # Only fetch user and add student/teacher details if not admin
+            if role_var.get() in ('student', 'teacher'):
+                user = self.db.get_user(username_var.get())
+                if not user:
+                    messagebox.showerror("Error", "User creation failed. Please try again.", parent=dialog)
+                    return
+                user_id = user[0]
+                if role_var.get() == 'student':
+                    dept_id = next(dept[0] for dept in departments if dept[1] == department_var.get())
+                    self.db.create_student(user_id, student_number_var.get(), first_name_var.get(), last_name_var.get(), email_var.get(), dept_id, level_var.get())
+                elif role_var.get() == 'teacher':
+                    dept_id = next(dept[0] for dept in departments if dept[1] == department_var.get())
+                    self.db.create_teacher(user_id, first_name_var.get(), last_name_var.get(), email_var.get(), dept_id)
             messagebox.showinfo("Success", "User added successfully!", parent=dialog)
             dialog.destroy()
             self.refresh_users()
@@ -330,15 +336,18 @@ class UserManagementFrame(ttk.Frame):
             role_combo['values'] = ('admin', 'teacher', 'student')
             role_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
-            # First Name
-            ttk.Label(form_frame, text="First Name:", font=("Helvetica", 11)).grid(row=3, column=0, sticky=tk.W, pady=8, padx=4)
+            # First Name (always visible)
             first_name_var = tk.StringVar(value=user[4])
-            ttk.Entry(form_frame, textvariable=first_name_var, font=("Helvetica", 11)).grid(row=3, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
-
-            # Last Name
-            ttk.Label(form_frame, text="Last Name:", font=("Helvetica", 11)).grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
+            first_name_label = ttk.Label(form_frame, text="First Name:")
+            first_name_entry = ttk.Entry(form_frame, textvariable=first_name_var, font=("Helvetica", 11))
+            first_name_label.grid(row=3, column=0, sticky=tk.W, pady=8, padx=4)
+            first_name_entry.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+            # Last Name (always visible)
             last_name_var = tk.StringVar(value=user[5])
-            ttk.Entry(form_frame, textvariable=last_name_var, font=("Helvetica", 11)).grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+            last_name_label = ttk.Label(form_frame, text="Last Name:")
+            last_name_entry = ttk.Entry(form_frame, textvariable=last_name_var, font=("Helvetica", 11))
+            last_name_label.grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
+            last_name_entry.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
             form_frame.columnconfigure(1, weight=1)
 
