@@ -94,67 +94,73 @@ class CourseManagementFrame(ttk.Frame):
         # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Add New Course")
-        dialog.geometry("400x500")
+        dialog.geometry("420x540")
         dialog.transient(self)
         dialog.grab_set()
 
+        # Header
+        header = ttk.Label(dialog, text="Add New Course", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
+
         # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18")
         form_frame.pack(fill=tk.BOTH, expand=True)
 
         # Course Name
-        ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Course Name:", font=("Helvetica", 11)).grid(row=0, column=0, sticky=tk.W, pady=8, padx=4)
         course_name_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=course_name_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=course_name_var, font=("Helvetica", 11)).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Course Code
-        ttk.Label(form_frame, text="Course Code:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Course Code:", font=("Helvetica", 11)).grid(row=1, column=0, sticky=tk.W, pady=8, padx=4)
         course_code_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=course_code_var).grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=course_code_var, font=("Helvetica", 11)).grid(row=1, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Credits
-        ttk.Label(form_frame, text="Credits:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Credits:", font=("Helvetica", 11)).grid(row=2, column=0, sticky=tk.W, pady=8, padx=4)
         credits_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=credits_var).grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=credits_var, font=("Helvetica", 11)).grid(row=2, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # ECTS
-        ttk.Label(form_frame, text="ECTS:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="ECTS:", font=("Helvetica", 11)).grid(row=3, column=0, sticky=tk.W, pady=8, padx=4)
         ects_var = tk.StringVar()
-        ttk.Entry(form_frame, textvariable=ects_var).grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=ects_var, font=("Helvetica", 11)).grid(row=3, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Level
-        ttk.Label(form_frame, text="Level:").grid(row=4, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Level:", font=("Helvetica", 11)).grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
         level_var = tk.StringVar()
-        level_combo = ttk.Combobox(form_frame, textvariable=level_var)
+        level_combo = ttk.Combobox(form_frame, textvariable=level_var, font=("Helvetica", 11))
         level_combo['values'] = ('Bachelor', 'Master')
-        level_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=5)
+        level_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Type
-        ttk.Label(form_frame, text="Type:").grid(row=5, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Type:", font=("Helvetica", 11)).grid(row=5, column=0, sticky=tk.W, pady=8, padx=4)
         type_var = tk.StringVar()
-        type_combo = ttk.Combobox(form_frame, textvariable=type_var)
+        type_combo = ttk.Combobox(form_frame, textvariable=type_var, font=("Helvetica", 11))
         type_combo['values'] = ('Must', 'Elective', 'Technical Elective')
-        type_combo.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=5)
+        type_combo.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Department
-        ttk.Label(form_frame, text="Department:").grid(row=6, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Department:", font=("Helvetica", 11)).grid(row=6, column=0, sticky=tk.W, pady=8, padx=4)
         department_var = tk.StringVar()
         departments = self.db.get_all_departments()
-        department_combo = ttk.Combobox(form_frame, textvariable=department_var)
+        department_combo = ttk.Combobox(form_frame, textvariable=department_var, font=("Helvetica", 11))
         department_combo['values'] = [dept[1] for dept in departments]
-        department_combo.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=5)
+        department_combo.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+
+        form_frame.columnconfigure(1, weight=1)
 
         def save_course():
             try:
                 # Validate required fields
                 if not all([course_name_var.get(), course_code_var.get(), credits_var.get(), 
                           ects_var.get(), level_var.get(), type_var.get(), department_var.get()]):
-                    messagebox.showerror("Error", "Please fill in all fields")
+                    messagebox.showerror("Error", "Please fill in all fields", parent=dialog)
                     return
 
                 # Check for duplicate course code
                 if self.db.check_course_code_exists(course_code_var.get()):
-                    messagebox.showerror("Error", "This course code already exists.")
+                    messagebox.showerror("Error", "This course code already exists.", parent=dialog)
                     return
 
                 # Get department ID
@@ -175,20 +181,21 @@ class CourseManagementFrame(ttk.Frame):
                     type_var.get(),
                     dept_id
                 ))
-                messagebox.showinfo("Success", "Course added successfully!")
+                messagebox.showinfo("Success", "Course added successfully!", parent=dialog)
                 dialog.destroy()
                 self.refresh_courses()
             except ValueError:
-                messagebox.showerror("Error", "Credits and ECTS must be numbers")
+                messagebox.showerror("Error", "Credits and ECTS must be numbers", parent=dialog)
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to add course: {str(e)}")
+                messagebox.showerror("Error", f"Failed to add course: {str(e)}", parent=dialog)
 
-        # Save button
-        save_btn = ttk.Button(form_frame, text="Save", command=save_course)
-        save_btn.grid(row=7, column=0, columnspan=2, pady=20)
-
-        # Configure grid weights
-        form_frame.columnconfigure(1, weight=1)
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, pady=(0, 18), padx=24)
+        save_btn = ttk.Button(button_frame, text="Save", width=14, command=save_course)
+        save_btn.pack(side=tk.RIGHT, padx=8)
+        cancel_btn = ttk.Button(button_frame, text="Cancel", width=14, command=dialog.destroy)
+        cancel_btn.pack(side=tk.RIGHT, padx=8)
 
     def on_course_select(self, event):
         # Get selected item
@@ -202,114 +209,116 @@ class CourseManagementFrame(ttk.Frame):
         # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Course Details")
-        dialog.geometry("400x300")
+        dialog.geometry("420x340")
         dialog.transient(self)
         dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Course Details", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
 
         # Get course details
         course = self.db.get_course_by_id(course_id)
         if not course:
-            messagebox.showerror("Error", "Course not found")
+            messagebox.showerror("Error", "Course not found", parent=dialog)
             dialog.destroy()
             return
 
         # Create details frame
-        details_frame = ttk.Frame(dialog, padding="20")
+        details_frame = ttk.Frame(dialog, padding="24 18 24 18")
         details_frame.pack(fill=tk.BOTH, expand=True)
 
         # Display course details
-        row = 0
-        for label, value in zip(
-            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department'],
-            course
-        ):
-            ttk.Label(details_frame, text=f"{label}:").grid(row=row, column=0, sticky=tk.W, pady=5)
-            ttk.Label(details_frame, text=str(value)).grid(row=row, column=1, sticky=tk.W, pady=5)
-            row += 1
+        labels = ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department']
+        for row, (label, value) in enumerate(zip(labels, course)):
+            ttk.Label(details_frame, text=f"{label}:", font=("Helvetica", 11, "bold")).grid(row=row, column=0, sticky=tk.W, pady=8, padx=4)
+            ttk.Label(details_frame, text=str(value), font=("Helvetica", 11)).grid(row=row, column=1, sticky=tk.W, pady=8, padx=4)
+        details_frame.columnconfigure(1, weight=1)
 
-        # Add buttons
-        buttons_frame = ttk.Frame(details_frame)
-        buttons_frame.grid(row=row, column=0, columnspan=2, pady=20)
-
-        edit_btn = ttk.Button(buttons_frame, text="Edit", command=lambda: self.edit_course(course_id, dialog))
-        edit_btn.pack(side=tk.LEFT, padx=5)
-
-        delete_btn = ttk.Button(buttons_frame, text="Delete", command=lambda: self.delete_course(course_id, dialog))
-        delete_btn.pack(side=tk.LEFT, padx=5)
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, pady=(0, 18), padx=24)
+        edit_btn = ttk.Button(button_frame, text="Edit", width=12, command=lambda: [dialog.destroy(), self.edit_course(course_id, dialog)])
+        edit_btn.pack(side=tk.RIGHT, padx=8)
+        delete_btn = ttk.Button(button_frame, text="Delete", width=12, command=lambda: self.delete_course(course_id, dialog))
+        delete_btn.pack(side=tk.RIGHT, padx=8)
 
     def edit_course(self, course_id, parent_dialog=None):
         # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Edit Course")
-        dialog.geometry("400x500")
+        dialog.geometry("420x540")
         dialog.transient(self)
         dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Edit Course", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
 
         # Get course details
         course = self.db.get_course_by_id(course_id)
         if not course:
-            messagebox.showerror("Error", "Course not found")
+            messagebox.showerror("Error", "Course not found", parent=dialog)
             dialog.destroy()
             return
 
         # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18")
         form_frame.pack(fill=tk.BOTH, expand=True)
 
         # Course Name
-        ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Course Name:", font=("Helvetica", 11)).grid(row=0, column=0, sticky=tk.W, pady=8, padx=4)
         course_name_var = tk.StringVar(value=course[1])
-        ttk.Entry(form_frame, textvariable=course_name_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=course_name_var, font=("Helvetica", 11)).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Course Code
-        ttk.Label(form_frame, text="Course Code:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Course Code:", font=("Helvetica", 11)).grid(row=1, column=0, sticky=tk.W, pady=8, padx=4)
         course_code_var = tk.StringVar(value=course[2])
-        ttk.Entry(form_frame, textvariable=course_code_var).grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=course_code_var, font=("Helvetica", 11)).grid(row=1, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Credits
-        ttk.Label(form_frame, text="Credits:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Credits:", font=("Helvetica", 11)).grid(row=2, column=0, sticky=tk.W, pady=8, padx=4)
         credits_var = tk.StringVar(value=str(course[3]))
-        ttk.Entry(form_frame, textvariable=credits_var).grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=credits_var, font=("Helvetica", 11)).grid(row=2, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # ECTS
-        ttk.Label(form_frame, text="ECTS:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="ECTS:", font=("Helvetica", 11)).grid(row=3, column=0, sticky=tk.W, pady=8, padx=4)
         ects_var = tk.StringVar(value=str(course[4]))
-        ttk.Entry(form_frame, textvariable=ects_var).grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Entry(form_frame, textvariable=ects_var, font=("Helvetica", 11)).grid(row=3, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Level
-        ttk.Label(form_frame, text="Level:").grid(row=4, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Level:", font=("Helvetica", 11)).grid(row=4, column=0, sticky=tk.W, pady=8, padx=4)
         level_var = tk.StringVar(value=course[5])
-        level_combo = ttk.Combobox(form_frame, textvariable=level_var)
+        level_combo = ttk.Combobox(form_frame, textvariable=level_var, font=("Helvetica", 11))
         level_combo['values'] = ('Bachelor', 'Master')
-        level_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=5)
+        level_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Type
-        ttk.Label(form_frame, text="Type:").grid(row=5, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Type:", font=("Helvetica", 11)).grid(row=5, column=0, sticky=tk.W, pady=8, padx=4)
         type_var = tk.StringVar(value=course[6])
-        type_combo = ttk.Combobox(form_frame, textvariable=type_var)
+        type_combo = ttk.Combobox(form_frame, textvariable=type_var, font=("Helvetica", 11))
         type_combo['values'] = ('Must', 'Elective', 'Technical Elective')
-        type_combo.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=5)
+        type_combo.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Department
-        ttk.Label(form_frame, text="Department:").grid(row=6, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Department:", font=("Helvetica", 11)).grid(row=6, column=0, sticky=tk.W, pady=8, padx=4)
         department_var = tk.StringVar(value=course[7])  # department name
         departments = self.db.get_all_departments()
-        department_combo = ttk.Combobox(form_frame, textvariable=department_var)
+        department_combo = ttk.Combobox(form_frame, textvariable=department_var, font=("Helvetica", 11))
         department_combo['values'] = [dept[1] for dept in departments]
-        department_combo.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=5)
+        department_combo.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+
+        form_frame.columnconfigure(1, weight=1)
 
         def save_changes():
             try:
                 # Validate required fields
-                if not all([course_name_var.get(), course_code_var.get(), credits_var.get(), 
-                          ects_var.get(), level_var.get(), type_var.get(), department_var.get()]):
-                    messagebox.showerror("Error", "Please fill in all fields")
+                if not all([course_name_var.get(), course_code_var.get(), credits_var.get(), ects_var.get(), level_var.get(), type_var.get(), department_var.get()]):
+                    messagebox.showerror("Error", "Please fill in all fields", parent=dialog)
                     return
-
                 # Get department ID
                 dept_name = department_var.get()
                 dept_id = next(dept[0] for dept in departments if dept[1] == dept_name)
-
                 # Update course
                 query = """
                 UPDATE course 
@@ -327,22 +336,23 @@ class CourseManagementFrame(ttk.Frame):
                     dept_id,
                     course_id
                 ))
-                messagebox.showinfo("Success", "Course updated successfully!")
+                messagebox.showinfo("Success", "Course updated successfully!", parent=dialog)
                 dialog.destroy()
                 if parent_dialog:
                     parent_dialog.destroy()
                 self.refresh_courses()
             except ValueError:
-                messagebox.showerror("Error", "Credits and ECTS must be numbers")
+                messagebox.showerror("Error", "Credits and ECTS must be numbers", parent=dialog)
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to update course: {str(e)}")
+                messagebox.showerror("Error", f"Failed to update course: {str(e)}", parent=dialog)
 
-        # Save button
-        save_btn = ttk.Button(form_frame, text="Save Changes", command=save_changes)
-        save_btn.grid(row=7, column=0, columnspan=2, pady=20)
-
-        # Configure grid weights
-        form_frame.columnconfigure(1, weight=1)
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, pady=(0, 18), padx=24)
+        save_btn = ttk.Button(button_frame, text="Save Changes", width=14, command=save_changes)
+        save_btn.pack(side=tk.RIGHT, padx=8)
+        cancel_btn = ttk.Button(button_frame, text="Cancel", width=14, command=dialog.destroy)
+        cancel_btn.pack(side=tk.RIGHT, padx=8)
 
     def delete_course(self, course_id, parent_dialog=None):
         if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this course?"):

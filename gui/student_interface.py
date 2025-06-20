@@ -180,78 +180,80 @@ class StudentInterface(ttk.Frame):
         self.show_course_details(course_id)
 
     def show_course_enrollment_dialog(self, course_id):
-        # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Course Enrollment")
-        dialog.geometry("400x300")
+        dialog.geometry("520x440")
+        dialog.minsize(520, 440)
         dialog.transient(self)
         dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Course Enrollment", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
 
         # Get course details
         course = self.db.get_course_by_id(course_id)
         if not course:
-            messagebox.showerror("Error", "Course not found")
+            messagebox.showerror("Error", "Course not found", parent=dialog)
             dialog.destroy()
             return
 
         # Create details frame
-        details_frame = ttk.Frame(dialog, padding="20")
+        details_frame = ttk.Frame(dialog, padding="24 18 24 18")
         details_frame.pack(fill=tk.BOTH, expand=True)
 
         # Display course details
-        row = 0
-        for label, value in zip(
-            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department'],
-            course
-        ):
-            ttk.Label(details_frame, text=f"{label}:").grid(row=row, column=0, sticky=tk.W, pady=5)
-            ttk.Label(details_frame, text=str(value)).grid(row=row, column=1, sticky=tk.W, pady=5)
-            row += 1
+        labels = ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department']
+        for row, (label, value) in enumerate(zip(labels, course)):
+            ttk.Label(details_frame, text=f"{label}:", font=("Helvetica", 11, "bold")).grid(row=row, column=0, sticky=tk.W, pady=8, padx=4)
+            ttk.Label(details_frame, text=str(value), font=("Helvetica", 11)).grid(row=row, column=1, sticky=tk.W, pady=8, padx=4)
+        details_frame.columnconfigure(1, weight=1)
 
-        # Add enroll button
-        enroll_btn = ttk.Button(
-            details_frame,
-            text="Enroll in Course",
-            command=lambda: self.enroll_in_course(course_id, dialog)
-        )
-        enroll_btn.grid(row=row, column=0, columnspan=2, pady=20)
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, 18), padx=24)
+        enroll_btn = ttk.Button(button_frame, text="Enroll in Course", width=16, command=lambda: self.enroll_in_course(course_id, dialog))
+        enroll_btn.pack(side=tk.RIGHT, padx=8)
+        cancel_btn = ttk.Button(button_frame, text="Cancel", width=12, command=dialog.destroy)
+        cancel_btn.pack(side=tk.RIGHT, padx=8)
 
     def show_course_details(self, course_id):
-        # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Course Details")
-        dialog.geometry("400x300")
+        dialog.geometry("520x440")
+        dialog.minsize(520, 440)
         dialog.transient(self)
         dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Course Details", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
 
         # Get course details
         course = self.db.get_course_by_id(course_id)
         if not course:
-            messagebox.showerror("Error", "Course not found")
+            messagebox.showerror("Error", "Course not found", parent=dialog)
             dialog.destroy()
             return
 
         # Create details frame
-        details_frame = ttk.Frame(dialog, padding="20")
+        details_frame = ttk.Frame(dialog, padding="24 18 24 18")
         details_frame.pack(fill=tk.BOTH, expand=True)
 
         # Display course details
-        row = 0
-        for label, value in zip(
-            ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department'],
-            course
-        ):
-            ttk.Label(details_frame, text=f"{label}:").grid(row=row, column=0, sticky=tk.W, pady=5)
-            ttk.Label(details_frame, text=str(value)).grid(row=row, column=1, sticky=tk.W, pady=5)
-            row += 1
+        labels = ['Course ID', 'Course Name', 'Course Code', 'Credits', 'ECTS', 'Level', 'Type', 'Department']
+        for row, (label, value) in enumerate(zip(labels, course)):
+            ttk.Label(details_frame, text=f"{label}:", font=("Helvetica", 11, "bold")).grid(row=row, column=0, sticky=tk.W, pady=8, padx=4)
+            ttk.Label(details_frame, text=str(value), font=("Helvetica", 11)).grid(row=row, column=1, sticky=tk.W, pady=8, padx=4)
+        details_frame.columnconfigure(1, weight=1)
 
-        # Add drop course button
-        drop_btn = ttk.Button(
-            details_frame,
-            text="Drop Course",
-            command=lambda: self.drop_course(course_id, dialog)
-        )
-        drop_btn.grid(row=row, column=0, columnspan=2, pady=20)
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, 18), padx=24)
+        drop_btn = ttk.Button(button_frame, text="Drop Course", width=14, command=lambda: self.drop_course(course_id, dialog))
+        drop_btn.pack(side=tk.RIGHT, padx=8)
+        cancel_btn = ttk.Button(button_frame, text="Cancel", width=12, command=dialog.destroy)
+        cancel_btn.pack(side=tk.RIGHT, padx=8)
 
     def enroll_in_course(self, course_id, dialog):
         try:

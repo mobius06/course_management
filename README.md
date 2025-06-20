@@ -78,6 +78,45 @@ python main.py
 ```
 The application window will open for login and management.
 
+---
+
+## How to Use the Course Management System
+
+### 1. Login
+- Launch the application and enter your username and password.
+- Default users: admin, teacher1, teacher2, teacher_math, teacher_ee, student1, student2 (all password123).
+- Click Login.
+
+### 2. Admin Panel
+- **User Management:** Add, edit, or delete users (students, teachers, admins).
+- **Department Management:** Add, edit, or remove departments.
+- **Course Management:** Add, edit, or delete courses. Deleting a course removes all related offerings/enrollments.
+- **Semester Management:** Add, edit, or remove semesters (e.g., "2024-2025 Spring").
+- **Course Offerings:** Assign courses to semesters and teachers.
+
+### 3. Teacher Panel
+- **Teaching Courses Tab:** View, add, edit, or refresh courses you offer. Edit all course details for your department's courses.
+- **Course Offerings Tab:** View, add, edit, or delete course offerings for your courses in specific semesters.
+
+### 4. Student Panel
+- **Available Courses Tab:** View and enroll in eligible courses for the current semester. See instructor names. Cannot enroll in previous semester courses.
+- **Enrolled Courses Tab:** View and drop courses you are enrolled in.
+
+### 5. General Rules
+- Students can only enroll in courses offered in the current semester and matching their level.
+- Students can take all course types in their department, but only Elective/Technical Elective from other departments.
+- Teachers can only offer/edit courses from their own department.
+- Deleting a course, teacher, or student will automatically remove all related offerings/enrollments.
+
+### 6. Troubleshooting
+- If you see errors about foreign key constraints, ensure you are not deleting referenced items or that cascade deletes are set up.
+- If you get a "transaction aborted" error, restart the application.
+
+### 7. Logging Out
+- Click the "Logout" button at the bottom of the window to return to the login screen.
+
+---
+
 ## Default Users
 
 The system comes with the following default users:

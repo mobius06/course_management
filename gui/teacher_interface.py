@@ -213,73 +213,75 @@ class TeacherInterface(ttk.Frame):
             self.offerings_tree.insert('', tk.END, values=offering)
 
     def show_add_offering_dialog(self):
-        # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Add Course Offering")
-        dialog.geometry("400x400")
+        dialog.geometry("420x340")
         dialog.transient(self)
         dialog.grab_set()
 
+        # Header
+        header = ttk.Label(dialog, text="Add Course Offering", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
+
         # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18")
         form_frame.pack(fill=tk.BOTH, expand=True)
 
         # Course selection
-        ttk.Label(form_frame, text="Course:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Course:", font=("Helvetica", 11)).grid(row=0, column=0, sticky=tk.W, pady=8, padx=4)
         course_var = tk.StringVar()
         courses = self.db.get_all_courses()
-        course_combo = ttk.Combobox(form_frame, textvariable=course_var)
+        course_combo = ttk.Combobox(form_frame, textvariable=course_var, font=("Helvetica", 11))
         course_combo['values'] = [f"{course[2]} - {course[1]}" for course in courses]
-        course_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+        course_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
 
         # Semester selection
-        ttk.Label(form_frame, text="Semester:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(form_frame, text="Semester:", font=("Helvetica", 11)).grid(row=1, column=0, sticky=tk.W, pady=8, padx=4)
         semester_var = tk.StringVar()
         semesters = self.db.get_all_semesters()
-        semester_combo = ttk.Combobox(form_frame, textvariable=semester_var)
-        semester_combo['values'] = [sem[1] for sem in semesters]  # sem[1] is semester_name
-        semester_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+        semester_combo = ttk.Combobox(form_frame, textvariable=semester_var, font=("Helvetica", 11))
+        semester_combo['values'] = [sem[1] for sem in semesters]
+        semester_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=8, padx=4)
+
+        form_frame.columnconfigure(1, weight=1)
 
         def save_offering():
             try:
                 # Validate required fields
                 if not all([course_var.get(), semester_var.get()]):
-                    messagebox.showerror("Error", "Please fill in all fields")
+                    messagebox.showerror("Error", "Please fill in all fields", parent=dialog)
                     return
-
                 # Get course ID
                 course_code = course_var.get().split(' - ')[0]
                 course_id = next(course[0] for course in courses if course[2] == course_code)
-
                 # Get semester ID
                 semester_name = semester_var.get()
                 semester_id = next(sem[0] for sem in semesters if sem[1] == semester_name)
-
                 # Get teacher ID
                 teacher = self.db.get_teacher(self.user['user_id'])
                 if not teacher:
-                    messagebox.showerror("Error", "Teacher not found")
+                    messagebox.showerror("Error", "Teacher not found", parent=dialog)
                     return
-
                 # Create course offering
                 self.db.create_course_offering(
                     course_id,
                     semester_id,
                     teacher[0]  # teacher_id
                 )
-                messagebox.showinfo("Success", "Course offering added successfully!")
+                messagebox.showinfo("Success", "Course offering added successfully!", parent=dialog)
                 dialog.destroy()
                 self.refresh_course_offerings()
                 self.refresh_teaching_courses()
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to add course offering: {str(e)}")
+                messagebox.showerror("Error", f"Failed to add course offering: {str(e)}", parent=dialog)
 
-        # Save button
-        save_btn = ttk.Button(form_frame, text="Save", command=save_offering)
-        save_btn.grid(row=2, column=0, columnspan=2, pady=20)
-
-        # Configure grid weights
-        form_frame.columnconfigure(1, weight=1)
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, pady=(0, 18), padx=24)
+        save_btn = ttk.Button(button_frame, text="Save", width=14, command=save_offering)
+        save_btn.pack(side=tk.RIGHT, padx=8)
+        cancel_btn = ttk.Button(button_frame, text="Cancel", width=14, command=dialog.destroy)
+        cancel_btn.pack(side=tk.RIGHT, padx=8)
 
     def on_teaching_course_select(self, event):
         # Get selected item
@@ -301,12 +303,15 @@ class TeacherInterface(ttk.Frame):
         self.show_course_offering_details(offering_id)
 
     def show_course_offering_details(self, offering_id):
-        # Create dialog window
         dialog = tk.Toplevel(self)
         dialog.title("Course Offering Details")
-        dialog.geometry("400x300")
+        dialog.geometry("420x340")
         dialog.transient(self)
         dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Course Offering Details", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
 
         # Get course offering details
         offering = next(
@@ -314,46 +319,42 @@ class TeacherInterface(ttk.Frame):
             None
         )
         if not offering:
-            messagebox.showerror("Error", "Course offering not found")
+            messagebox.showerror("Error", "Course offering not found", parent=dialog)
             dialog.destroy()
             return
 
         # Create details frame
-        details_frame = ttk.Frame(dialog, padding="20")
+        details_frame = ttk.Frame(dialog, padding="24 18 24 18")
         details_frame.pack(fill=tk.BOTH, expand=True)
 
         # Display course offering details
-        row = 0
-        for label, value in zip(
-            ['Offering ID', 'Course Name', 'Course Code', 'Semester', 'Year', 'Department'],
-            offering
-        ):
-            ttk.Label(details_frame, text=f"{label}:").grid(row=row, column=0, sticky=tk.W, pady=5)
-            ttk.Label(details_frame, text=str(value)).grid(row=row, column=1, sticky=tk.W, pady=5)
-            row += 1
+        labels = ['Offering ID', 'Course Name', 'Course Code', 'Semester', 'Year', 'Department']
+        for row, (label, value) in enumerate(zip(labels, offering)):
+            ttk.Label(details_frame, text=f"{label}:", font=("Helvetica", 11, "bold")).grid(row=row, column=0, sticky=tk.W, pady=8, padx=4)
+            ttk.Label(details_frame, text=str(value), font=("Helvetica", 11)).grid(row=row, column=1, sticky=tk.W, pady=8, padx=4)
+        details_frame.columnconfigure(1, weight=1)
 
-        # Add buttons
-        buttons_frame = ttk.Frame(details_frame)
-        buttons_frame.grid(row=row, column=0, columnspan=2, pady=20)
-
-        # Get teacher ID
+        # Action buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, pady=(0, 18), padx=24)
         teacher = self.db.get_teacher(self.user['user_id'])
         if teacher and offering[3] == teacher[0]:  # instructor_id
-            edit_btn = ttk.Button(
-                buttons_frame,
-                text="Edit",
-                command=lambda: self.edit_course_offering(offering_id, dialog)
-            )
-            edit_btn.pack(side=tk.LEFT, padx=5)
-
-            delete_btn = ttk.Button(
-                buttons_frame,
-                text="Delete",
-                command=lambda: self.delete_course_offering(offering_id, dialog)
-            )
-            delete_btn.pack(side=tk.LEFT, padx=5)
+            edit_btn = ttk.Button(button_frame, text="Edit", width=12, command=lambda: [dialog.destroy(), self.edit_course_offering(offering_id, dialog)])
+            edit_btn.pack(side=tk.RIGHT, padx=8)
+            delete_btn = ttk.Button(button_frame, text="Delete", width=12, command=lambda: self.delete_course_offering(offering_id, dialog))
+            delete_btn.pack(side=tk.RIGHT, padx=8)
 
     def edit_course_offering(self, offering_id, parent_dialog=None):
+        dialog = tk.Toplevel(self)
+        dialog.title("Edit Course Offering")
+        dialog.geometry("420x540")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Edit Course Offering", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
+
         # Get selected item
         selection = self.teaching_tree.selection()
         if not selection:
@@ -378,12 +379,6 @@ class TeacherInterface(ttk.Frame):
         if not course:
             messagebox.showerror("Error", "Course not found")
             return
-        # Create dialog window
-        dialog = tk.Toplevel(self)
-        dialog.title("Edit Course")
-        dialog.geometry("400x500")
-        dialog.transient(self)
-        dialog.grab_set()
         # Get teacher info
         teacher = self.db.get_teacher(self.user['user_id'])
         if not teacher:
@@ -393,7 +388,7 @@ class TeacherInterface(ttk.Frame):
         department_id = teacher[3]  # department_id
         department_name = self.db.get_department_name(department_id)
         # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18", font=("Helvetica", 11))
         form_frame.pack(fill=tk.BOTH, expand=True)
         # Course Name
         ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
@@ -468,6 +463,16 @@ class TeacherInterface(ttk.Frame):
                 messagebox.showerror("Error", f"Failed to delete course offering: {str(e)}")
 
     def edit_teaching_course(self):
+        dialog = tk.Toplevel(self)
+        dialog.title("Edit Teaching Course")
+        dialog.geometry("420x540")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Edit Teaching Course", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
+
         # Get selected item
         selection = self.teaching_tree.selection()
         if not selection:
@@ -492,12 +497,6 @@ class TeacherInterface(ttk.Frame):
         if not course:
             messagebox.showerror("Error", "Course not found")
             return
-        # Create dialog window
-        dialog = tk.Toplevel(self)
-        dialog.title("Edit Course")
-        dialog.geometry("400x500")
-        dialog.transient(self)
-        dialog.grab_set()
         # Get teacher info
         teacher = self.db.get_teacher(self.user['user_id'])
         if not teacher:
@@ -507,7 +506,7 @@ class TeacherInterface(ttk.Frame):
         department_id = teacher[3]  # department_id
         department_name = self.db.get_department_name(department_id)
         # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18", font=("Helvetica", 11))
         form_frame.pack(fill=tk.BOTH, expand=True)
         # Course Name
         ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
@@ -580,12 +579,15 @@ class TeacherInterface(ttk.Frame):
         self.delete_course_offering(offering_id)
 
     def show_add_course_dialog(self):
-        # Create dialog window
         dialog = tk.Toplevel(self)
-        dialog.title("Add New Course")
-        dialog.geometry("400x500")
+        dialog.title("Add Course")
+        dialog.geometry("420x540")
         dialog.transient(self)
         dialog.grab_set()
+
+        # Header
+        header = ttk.Label(dialog, text="Add Course", font=("Helvetica", 14, "bold"))
+        header.pack(pady=(18, 0))
 
         # Get teacher info
         teacher = self.db.get_teacher(self.user['user_id'])
@@ -597,7 +599,7 @@ class TeacherInterface(ttk.Frame):
         department_name = self.db.get_department_name(department_id)
 
         # Create form
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(dialog, padding="24 18 24 18", font=("Helvetica", 11))
         form_frame.pack(fill=tk.BOTH, expand=True)
 
         # Course Name

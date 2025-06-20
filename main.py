@@ -116,28 +116,21 @@ class CourseManagementSystem:
         logout_btn.pack(side=tk.BOTTOM, pady=10)
 
     def show_admin_interface(self):
-        # Create admin interface
-        admin_frame = ttk.Frame(self.root)
-        admin_frame.pack(fill=tk.BOTH, expand=True)
+        # Create a notebook for admin tabs
+        admin_notebook = ttk.Notebook(self.root)
+        admin_notebook.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        # Create notebook for tabs
-        notebook = ttk.Notebook(admin_frame)
-        notebook.pack(fill=tk.BOTH, expand=True)
+        # Users tab
+        users_tab = ttk.Frame(admin_notebook)
+        user_frame = UserManagementFrame(users_tab, self.db, self.current_user, mode='user')
+        user_frame.pack(fill=tk.BOTH, expand=True)
+        admin_notebook.add(users_tab, text="Users")
 
-        # Create tabs
-        course_management_tab = ttk.Frame(notebook)
-        user_management_tab = ttk.Frame(notebook)
-
-        notebook.add(course_management_tab, text="Course Management")
-        notebook.add(user_management_tab, text="User Management")
-
-        # Add course management interface
-        course_management = CourseManagementFrame(course_management_tab, self.db, self.current_user)
-        course_management.pack(fill=tk.BOTH, expand=True)
-
-        # Add user management interface
-        user_management = UserManagementFrame(user_management_tab, self.db, self.current_user)
-        user_management.pack(fill=tk.BOTH, expand=True)
+        # Departments tab
+        departments_tab = ttk.Frame(admin_notebook)
+        department_frame = UserManagementFrame(departments_tab, self.db, self.current_user, mode='department')
+        department_frame.pack(fill=tk.BOTH, expand=True)
+        admin_notebook.add(departments_tab, text="Departments")
 
         # Add logout button
         logout_btn = ttk.Button(
