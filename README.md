@@ -89,7 +89,7 @@ The application window will open for login and management.
 
 ### 2. Admin Panel
 - **User Management:** Add, edit, or delete users (students, teachers, admins).
-- **Department Management:** Add, edit, or remove departments.
+- **Department Management:** Add, edit, or remove departments. (departments with student and course records cannot be deleted)
 - **Course Management:** Add, edit, or delete courses. Deleting a course removes all related offerings/enrollments.
 - **Semester Management:** Add, edit, or remove semesters (e.g., "2024-2025 Spring").
 - **Course Offerings:** Assign courses to semesters and teachers.
