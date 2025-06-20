@@ -50,32 +50,12 @@ class Database:
         return None
 
     def hash_password(self, password):
-        """Hash a password using SHA-256 with a random salt"""
-        salt = secrets.token_hex(16)
-        # Ensure password is encoded as UTF-8
-        password_bytes = password.encode('utf-8')
-        salt_bytes = salt.encode('utf-8')
-        # Combine password and salt
-        combined = password_bytes + salt_bytes
-        # Generate hash
-        hashed = hashlib.sha256(combined).hexdigest()
-        return f"{salt}${hashed}"
+        # For simplicity, just return the password as is (plain text)
+        return password
 
     def verify_password(self, stored_password, provided_password):
-        """Verify a password against its hash"""
-        try:
-            salt, hashed = stored_password.split('$')
-            # Ensure password is encoded as UTF-8
-            password_bytes = provided_password.encode('utf-8')
-            salt_bytes = salt.encode('utf-8')
-            # Combine password and salt
-            combined = password_bytes + salt_bytes
-            # Generate hash
-            expected = hashlib.sha256(combined).hexdigest()
-            return hashed == expected
-        except Exception as e:
-            print(f"Error in verify_password: {str(e)}")
-            return False
+        # For simplicity, just compare plain text passwords
+        return stored_password == provided_password
 
     # User operations
     def get_user(self, username):
@@ -92,28 +72,23 @@ class Database:
         query = "SELECT user_id, username, role, created_at FROM \"user\" ORDER BY user_id"
         return self.fetch_all(query)
 
-    def create_user(self, username, password, role):
-        """Create a new user with password"""
+    def create_user(self, username, password, role, first_name, last_name):
+        """Create a new user with plain text password and name"""
         try:
-            # Check if username already exists
             if self.check_username_exists(username):
                 return False
-
-            # Hash password
-            hashed_password = self.hash_password(password)
-
-            # Insert user
+            # Store password as plain text
             query = """
-            INSERT INTO "user" (username, password, role)
-            VALUES (%s, %s, %s)
+            INSERT INTO "user" (username, password, role, first_name, last_name)
+            VALUES (%s, %s, %s, %s, %s)
             """
-            self.execute_query(query, (username, hashed_password, role.lower()))
+            self.execute_query(query, (username, password, role.lower(), first_name, last_name))
             return True
         except Exception as e:
             print(f"Error creating user: {str(e)}")
             return False
 
-    def update_user(self, user_id, username, password=None, role=None):
+    def update_user(self, user_id, username, password=None, role=None, first_name=None, last_name=None):
         """Update user information"""
         try:
             # Check if username already exists (excluding current user)
@@ -129,13 +104,20 @@ class Database:
                 params.append(username)
 
             if password:
-                hashed_password = self.hash_password(password)
                 update_fields.append("password = %s")
-                params.append(hashed_password)
+                params.append(password)
 
             if role:
                 update_fields.append("role = %s")
                 params.append(role.lower())
+
+            if first_name is not None:
+                update_fields.append("first_name = %s")
+                params.append(first_name)
+
+            if last_name is not None:
+                update_fields.append("last_name = %s")
+                params.append(last_name)
 
             if not update_fields:
                 return False
@@ -172,7 +154,7 @@ class Database:
             return None
             
         print(f"Found user data: {user}")
-        print(f"Stored password hash: {user[2]}")
+        print(f"Stored password: {user[2]}")
         print(f"Attempting to verify password...")
         
         if self.verify_password(user[2], password):
@@ -273,7 +255,7 @@ class Database:
     # Enrollment operations
     def is_student_enrolled(self, student_id, course_id):
         """Check if a student is already enrolled in a course"""
-        query = "SELECT * FROM enrolls_in WHERE user_id = %s AND course_id = %s"
+        query = "SELECT * FROM enrolls_in WHERE student_id = %s AND course_id = %s"
         return bool(self.fetch_one(query, (student_id, course_id)))
 
     def get_student_courses(self, student_id):
@@ -286,21 +268,48 @@ class Database:
         JOIN department d ON c.department_id = d.department_id
         JOIN course_offering co ON c.course_id = co.course_id
         JOIN semester s ON co.semester_id = s.semester_id
-        WHERE e.user_id = %s
+        WHERE e.student_id = %s
         ORDER BY co.year DESC, s.semester_name
         """
         return self.fetch_all(query, (student_id,))
 
     def enroll_student(self, student_id, course_id):
-        """Enroll a student in a course with proper validation"""
+        """Enroll a student in a course with proper validation and restrictions"""
         try:
             # Start transaction
             self.connection.autocommit = False
-            
+
+            # Get student info (including level and department)
+            student_query = "SELECT level, department_id FROM student WHERE student_id = %s"
+            student_info = self.fetch_one(student_query, (student_id,))
+            if not student_info:
+                return False, "Student not found"
+            student_level, student_dept = student_info
+
+            # Get course info (level, type, department)
+            course_query = "SELECT level, type, department_id FROM course WHERE course_id = %s"
+            course_info = self.fetch_one(course_query, (course_id,))
+            if not course_info:
+                return False, "Course not found"
+            course_level, course_type, course_dept = course_info
+
+            # Restriction 1: Level must match
+            if student_level != course_level:
+                return False, f"You can only enroll in {student_level} level courses."
+
+            # Restriction 2: Department/type rules
+            if student_dept == course_dept:
+                # Can take any type
+                pass
+            else:
+                # Can only take Elective or Technical Elective
+                if course_type not in ("Elective", "Technical Elective"):
+                    return False, "You can only take Elective or Technical Elective courses from other departments."
+
             # Check if already enrolled
             if self.is_student_enrolled(student_id, course_id):
                 return False, "Already enrolled in this course"
-            
+
             # Check if course is available for enrollment
             query = """
             SELECT co.offering_id 
@@ -312,11 +321,11 @@ class Database:
             """
             if not self.fetch_one(query, (course_id,)):
                 return False, "Course is not available for enrollment"
-            
+
             # Perform enrollment
-            enroll_query = "INSERT INTO enrolls_in (user_id, course_id) VALUES (%s, %s)"
+            enroll_query = "INSERT INTO enrolls_in (student_id, course_id) VALUES (%s, %s)"
             self.execute_query(enroll_query, (student_id, course_id))
-            
+
             # Commit transaction
             self.connection.commit()
             return True, "Successfully enrolled in course"
@@ -326,14 +335,15 @@ class Database:
 
     # Course offering operations
     def get_course_offerings(self, semester_id=None):
-        """Get course offerings with department names"""
+        """Get course offerings with department names and instructor name"""
         query = """
-        SELECT co.offering_id, c.course_name, c.course_code, 
-               s.semester_name, co.year, d.department_name
+        SELECT co.offering_id, c.course_name, c.course_code, s.semester_name, co.year, d.department_name, u.first_name || ' ' || u.last_name as instructor_name
         FROM course_offering co
         JOIN course c ON co.course_id = c.course_id
         JOIN semester s ON co.semester_id = s.semester_id
         JOIN department d ON c.department_id = d.department_id
+        JOIN teacher t ON co.instructor_id = t.teacher_id
+        JOIN "user" u ON t.user_id = u.user_id
         """
         if semester_id:
             query += " WHERE co.semester_id = %s"
@@ -355,6 +365,15 @@ class Database:
         return self.fetch_all(query, (teacher_id,))
 
     def create_course_offering(self, course_id, semester_id, instructor_id, year):
+        # Check that the teacher is from the same department as the course
+        teacher_dept = self.fetch_one("SELECT department_id FROM teacher WHERE teacher_id = %s", (instructor_id,))
+        course_dept = self.fetch_one("SELECT department_id FROM course WHERE course_id = %s", (course_id,))
+        if not teacher_dept or not course_dept or teacher_dept[0] != course_dept[0]:
+            raise Exception("You can only offer courses from your own department.")
+        # Prevent duplicate offerings for the same course/semester
+        exists = self.fetch_one("SELECT 1 FROM course_offering WHERE course_id = %s AND semester_id = %s", (course_id, semester_id))
+        if exists:
+            raise Exception("This course is already offered by another teacher in this semester.")
         query = """
         INSERT INTO course_offering (course_id, semester_id, instructor_id, year)
         VALUES (%s, %s, %s, %s)
@@ -371,9 +390,8 @@ class Database:
         return self.execute_query(query, (course_id, semester_id, instructor_id, year, offering_id))
 
     def update_user_password(self, user_id, new_password):
-        hashed_password = self.hash_password(new_password)
         query = "UPDATE \"user\" SET password = %s WHERE user_id = %s"
-        return self.execute_query(query, (hashed_password, user_id))
+        return self.execute_query(query, (new_password, user_id))
 
     def check_course_code_exists(self, course_code, exclude_id=None):
         """Check if a course code already exists"""
@@ -409,4 +427,45 @@ class Database:
             ))
             return True, "Course updated successfully"
         except Exception as e:
-            return False, f"Failed to update course: {str(e)}" 
+            return False, f"Failed to update course: {str(e)}"
+
+    def create_course(self, course_name, course_code, credits, ects, level, type, department_id, creator_teacher_id=None):
+        # If a teacher is creating, restrict department
+        if creator_teacher_id is not None:
+            teacher_dept = self.fetch_one("SELECT department_id FROM teacher WHERE teacher_id = %s", (creator_teacher_id,))
+            if not teacher_dept or teacher_dept[0] != department_id:
+                raise Exception("You can only add courses to your own department.")
+        query = """
+        INSERT INTO course (course_name, course_code, credits, ects, level, type, department_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        RETURNING course_id
+        """
+        return self.fetch_one(query, (course_name, course_code, credits, ects, level, type, department_id))
+
+    def get_all_offered_courses_for_student(self, student_id):
+        """Get all courses offered in the current semester for the student's level and department restrictions, including instructor name"""
+        # Get student info
+        student = self.fetch_one("SELECT level, department_id FROM student WHERE student_id = %s", (student_id,))
+        if not student:
+            return []
+        student_level, student_dept = student
+        # Get current semester
+        semester = self.get_current_semester()
+        if not semester:
+            return []
+        semester_id = semester[0]
+        # Only show courses that are offered in the current semester
+        query = """
+        SELECT c.course_id, c.course_name, c.course_code, c.credits, c.ects, c.level, c.type, d.department_name, u.first_name || ' ' || u.last_name as instructor_name
+        FROM course_offering co
+        JOIN course c ON co.course_id = c.course_id
+        JOIN department d ON c.department_id = d.department_id
+        JOIN teacher t ON co.instructor_id = t.teacher_id
+        JOIN "user" u ON t.user_id = u.user_id
+        WHERE co.semester_id = %s AND c.level = %s
+        """
+        params = [semester_id, student_level]
+        # Department/type rules
+        query += " AND (c.department_id = %s OR c.type IN ('Elective', 'Technical Elective'))"
+        params.append(student_dept)
+        return self.fetch_all(query, tuple(params)) 

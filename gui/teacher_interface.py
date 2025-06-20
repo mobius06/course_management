@@ -10,6 +10,10 @@ class TeacherInterface(ttk.Frame):
         self.setup_ui()
 
     def setup_ui(self):
+        # Welcome label
+        welcome_label = ttk.Label(self, text=f"Welcome, {self.user.get('full_name', self.user.get('username', 'User'))}!", font=("Helvetica", 14, "bold"))
+        welcome_label.pack(pady=(10, 0))
+
         # Create main container
         self.main_container = ttk.Frame(self)
         self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -35,6 +39,14 @@ class TeacherInterface(ttk.Frame):
         # Create buttons frame
         buttons_frame = ttk.Frame(self.teaching_courses_tab)
         buttons_frame.pack(fill=tk.X, pady=(0, 10))
+
+        # Add Course button
+        add_course_btn = ttk.Button(
+            buttons_frame,
+            text="Add Course",
+            command=self.show_add_course_dialog
+        )
+        add_course_btn.pack(side=tk.LEFT, padx=5)
 
         # Add buttons
         edit_btn = ttk.Button(
@@ -477,3 +489,100 @@ class TeacherInterface(ttk.Frame):
         item = selection[0]
         offering_id = self.offerings_tree.item(item)['values'][0]
         self.delete_course_offering(offering_id)
+
+    def show_add_course_dialog(self):
+        # Create dialog window
+        dialog = tk.Toplevel(self)
+        dialog.title("Add New Course")
+        dialog.geometry("400x500")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # Get teacher info
+        teacher = self.db.get_teacher(self.user['user_id'])
+        if not teacher:
+            messagebox.showerror("Error", "Teacher not found")
+            dialog.destroy()
+            return
+        department_id = teacher[3]  # department_id
+        department_name = self.db.get_department_name(department_id)
+
+        # Create form
+        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Course Name
+        ttk.Label(form_frame, text="Course Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        course_name_var = tk.StringVar()
+        ttk.Entry(form_frame, textvariable=course_name_var).grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Course Code
+        ttk.Label(form_frame, text="Course Code:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        course_code_var = tk.StringVar()
+        ttk.Entry(form_frame, textvariable=course_code_var).grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Credits
+        ttk.Label(form_frame, text="Credits:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        credits_var = tk.StringVar()
+        ttk.Entry(form_frame, textvariable=credits_var).grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # ECTS
+        ttk.Label(form_frame, text="ECTS:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        ects_var = tk.StringVar()
+        ttk.Entry(form_frame, textvariable=ects_var).grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Level
+        ttk.Label(form_frame, text="Level:").grid(row=4, column=0, sticky=tk.W, pady=5)
+        level_var = tk.StringVar()
+        level_combo = ttk.Combobox(form_frame, textvariable=level_var)
+        level_combo['values'] = ('Bachelor', 'Master')
+        level_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Type
+        ttk.Label(form_frame, text="Type:").grid(row=5, column=0, sticky=tk.W, pady=5)
+        type_var = tk.StringVar()
+        type_combo = ttk.Combobox(form_frame, textvariable=type_var)
+        type_combo['values'] = ('Must', 'Elective', 'Technical Elective')
+        type_combo.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Department (fixed)
+        ttk.Label(form_frame, text="Department:").grid(row=6, column=0, sticky=tk.W, pady=5)
+        department_var = tk.StringVar(value=department_name)
+        ttk.Label(form_frame, text=department_name).grid(row=6, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        def save_course():
+            try:
+                # Validate required fields
+                if not all([course_name_var.get(), course_code_var.get(), credits_var.get(), 
+                          ects_var.get(), level_var.get(), type_var.get()]):
+                    messagebox.showerror("Error", "Please fill in all fields")
+                    return
+
+                # Check for duplicate course code
+                if self.db.check_course_code_exists(course_code_var.get()):
+                    messagebox.showerror("Error", "This course code already exists.")
+                    return
+
+                # Insert course using teacher's department and teacher id
+                self.db.create_course(
+                    course_name_var.get(),
+                    course_code_var.get(),
+                    int(credits_var.get()),
+                    int(ects_var.get()),
+                    level_var.get(),
+                    type_var.get(),
+                    department_id,
+                    creator_teacher_id=teacher[0]
+                )
+                messagebox.showinfo("Success", "Course added successfully!")
+                dialog.destroy()
+                self.refresh_teaching_courses()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to add course: {str(e)}")
+
+        # Save button
+        save_btn = ttk.Button(form_frame, text="Save", command=save_course)
+        save_btn.grid(row=7, column=0, columnspan=2, pady=20)
+
+        # Configure grid weights
+        form_frame.columnconfigure(1, weight=1)

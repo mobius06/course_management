@@ -62,11 +62,16 @@ class CourseManagementSystem:
             messagebox.showerror("Error", "Invalid username or password")
             return
 
+        # Fetch full name from user table (normalized)
+        role = user[3]
+        full_name = f"{user[4]} {user[5]}"
+
         print(f"Authenticated user: {user}")
         self.current_user = {
             'user_id': user[0],
             'username': user[1],
-            'role': user[3]  # Changed from user[2] to user[3] for role
+            'role': role,
+            'full_name': full_name
         }
         print(f"Current user data: {self.current_user}")
 

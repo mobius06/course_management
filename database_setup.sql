@@ -1,10 +1,3 @@
--- Create new database
-CREATE DATABASE course_management_new;
-
--- Connect to the new database
-\c course_management_new;
-
--- Create tables
 CREATE TABLE department (
     department_id SERIAL PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL,
@@ -37,27 +30,30 @@ CREATE TABLE "user" (
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
     role VARCHAR(20) CHECK (role IN ('admin', 'teacher', 'student')),
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE student (
     student_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(user_id),
+    user_id INTEGER UNIQUE REFERENCES "user"(user_id) ON DELETE CASCADE,
     student_number VARCHAR(20) UNIQUE NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     department_id INTEGER REFERENCES department(department_id),
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    level VARCHAR(20) CHECK (level IN ('Bachelor', 'Master')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE teacher (
     teacher_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(user_id),
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    user_id INTEGER UNIQUE REFERENCES "user"(user_id) ON DELETE CASCADE,
     email VARCHAR(100) UNIQUE NOT NULL,
     department_id INTEGER REFERENCES department(department_id),
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -72,7 +68,7 @@ CREATE TABLE course_offering (
 
 CREATE TABLE enrolls_in (
     enrollment_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES student(student_id),
+    student_id INTEGER REFERENCES student(student_id),
     course_id INTEGER REFERENCES course(course_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -91,23 +87,23 @@ INSERT INTO semester (semester_name, year, start_date, end_date) VALUES
     ('2024-2025 Spring', 2025, '2025-02-01', '2025-06-30'),
     ('2025 Summer', 2025, '2025-07-01', '2025-08-31');
 
--- Users (with properly hashed passwords - default password is 'password123')
-INSERT INTO "user" (username, password, role) VALUES
-    ('admin', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'admin'),
-    ('teacher1', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'teacher'),
-    ('teacher2', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'teacher'),
-    ('student1', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'student'),
-    ('student2', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'student');
+-- Users (plain text passwords - default password is 'password123')
+INSERT INTO "user" (username, password, role, first_name, last_name) VALUES
+    ('admin', 'password123', 'admin', 'System', 'Administrator'),
+    ('teacher1', 'password123', 'teacher', 'John', 'Smith'),
+    ('teacher2', 'password123', 'teacher', 'Jane', 'Doe'),
+    ('student1', 'password123', 'student', 'Alice', 'Johnson'),
+    ('student2', 'password123', 'student', 'Bob', 'Williams');
 
 -- Teachers
-INSERT INTO teacher (user_id, first_name, last_name, email, department_id) VALUES
-    (2, 'John', 'Smith', 'john.smith@university.edu', 1),
-    (3, 'Jane', 'Doe', 'jane.doe@university.edu', 1);
+INSERT INTO teacher (user_id, email, department_id) VALUES
+    (2, 'john.smith@university.edu', 1),
+    (3, 'jane.doe@university.edu', 1);
 
 -- Students
-INSERT INTO student (user_id, student_number, first_name, last_name, email, department_id) VALUES
-    (4, 'STU0001', 'Alice', 'Johnson', 'alice.johnson@university.edu', 1),
-    (5, 'STU0002', 'Bob', 'Williams', 'bob.williams@university.edu', 1);
+INSERT INTO student (user_id, student_number, email, department_id, first_name, last_name, level) VALUES
+    (4, 'STU0001', 'alice.johnson@university.edu', 1, 'Alice', 'Johnson', 'Bachelor'),
+    (5, 'STU0002', 'bob.williams@university.edu', 1, 'Bob', 'Williams', 'Bachelor');
 
 -- Courses
 INSERT INTO course (course_name, course_code, credits, ects, level, type, department_id) VALUES
@@ -126,7 +122,7 @@ INSERT INTO course_offering (course_id, semester_id, instructor_id, year) VALUES
     (5, 3, 1, 2025);  -- CS501 in Summer 2025
 
 -- Enrollments
-INSERT INTO enrolls_in (user_id, course_id) VALUES
+INSERT INTO enrolls_in (student_id, course_id) VALUES
     (1, 1),  -- Student 1 in CS101
     (1, 2),  -- Student 1 in CS201
     (2, 1);  -- Student 2 in CS101 

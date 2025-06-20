@@ -78,6 +78,7 @@ CREATE TABLE student (
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     department_id INTEGER REFERENCES department(department_id),
+    level VARCHAR(20) CHECK (level IN ('Bachelor', 'Master')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```

@@ -34,19 +34,21 @@ WITH new_users AS (
     SELECT 
         username,
         password,
-        role
+        role,
+        first_name,
+        last_name
     FROM (VALUES 
-        ('teacher1', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'teacher'),
-        ('teacher2', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'teacher'),
-        ('student1', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'student'),
-        ('student2', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'student')
-    ) AS u(username, password, role)
+        ('teacher1', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'teacher', 'John', 'Smith'),
+        ('teacher2', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'teacher', 'Jane', 'Doe'),
+        ('student1', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'student', 'Alice', 'Johnson'),
+        ('student2', '5c44c5326f03a7d13fb3092af58258a4$58c00299abd0858b5aedf33c7307c694ed6ff7165cee720f0b5a1255cd7864e2', 'student', 'Bob', 'Williams')
+    ) AS u(username, password, role, first_name, last_name)
     WHERE NOT EXISTS (
         SELECT 1 FROM "user" WHERE username = u.username
     )
 )
-INSERT INTO "user" (username, password, role)
-SELECT username, password, role
+INSERT INTO "user" (username, password, role, first_name, last_name)
+SELECT username, password, role, first_name, last_name
 FROM new_users;
 
 -- Add teachers if they don't exist
@@ -103,7 +105,11 @@ WITH student_data AS (
         CASE 
             WHEN u.username = 'student1' THEN 'alice.johnson@university.edu'
             WHEN u.username = 'student2' THEN 'bob.williams@university.edu'
-        END as email
+        END as email,
+        CASE 
+            WHEN u.username = 'student1' THEN 'Bachelor'
+            WHEN u.username = 'student2' THEN 'Bachelor'
+        END as level
     FROM "user" u
     CROSS JOIN department d
     WHERE u.role = 'student'
@@ -112,14 +118,15 @@ WITH student_data AS (
         SELECT 1 FROM student s WHERE s.user_id = u.user_id
     )
 )
-INSERT INTO student (user_id, department_id, student_number, first_name, last_name, email)
+INSERT INTO student (user_id, department_id, student_number, first_name, last_name, email, level)
 SELECT 
     user_id,
     department_id,
     student_number,
     first_name,
     last_name,
-    email
+    email,
+    level
 FROM student_data;
 
 -- Add courses if they don't exist

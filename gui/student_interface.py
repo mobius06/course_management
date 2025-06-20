@@ -10,6 +10,10 @@ class StudentInterface(ttk.Frame):
         self.setup_ui()
 
     def setup_ui(self):
+        # Welcome label
+        welcome_label = ttk.Label(self, text=f"Welcome, {self.user.get('full_name', self.user.get('username', 'User'))}!", font=("Helvetica", 14, "bold"))
+        welcome_label.pack(pady=(10, 0))
+
         # Create main container
         self.main_container = ttk.Frame(self)
         self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -33,7 +37,7 @@ class StudentInterface(ttk.Frame):
 
     def setup_available_courses_tab(self):
         # Create Treeview for available courses
-        columns = ('course_id', 'course_name', 'course_code', 'credits', 'ects', 'level', 'type', 'department')
+        columns = ('course_id', 'course_name', 'course_code', 'credits', 'ects', 'level', 'type', 'department', 'instructor')
         self.available_tree = ttk.Treeview(
             self.available_courses_tab,
             columns=columns,
@@ -49,6 +53,7 @@ class StudentInterface(ttk.Frame):
         self.available_tree.heading('level', text='Level')
         self.available_tree.heading('type', text='Type')
         self.available_tree.heading('department', text='Department')
+        self.available_tree.heading('instructor', text='Instructor')
 
         # Define columns
         self.available_tree.column('course_id', width=50)
@@ -59,6 +64,7 @@ class StudentInterface(ttk.Frame):
         self.available_tree.column('level', width=100)
         self.available_tree.column('type', width=150)
         self.available_tree.column('department', width=150)
+        self.available_tree.column('instructor', width=150)
 
         # Add scrollbar
         scrollbar = ttk.Scrollbar(self.available_courses_tab, orient=tk.VERTICAL, command=self.available_tree.yview)
@@ -131,14 +137,10 @@ class StudentInterface(ttk.Frame):
         if not student:
             return
 
-        # Get current semester
-        current_semester = self.db.get_current_semester()
-        if not current_semester:
-            messagebox.showerror("Error", "No active semester found")
-            return
-
-        # Fetch and display available courses
-        courses = self.db.get_all_courses()
+        # Get all offered courses for the student (with instructor)
+        courses = self.db.get_all_offered_courses_for_student(student[0])
+        # courses: (course_id, course_name, course_code, credits, ects, level, type, department_name, instructor_name)
+        # Remove already enrolled courses
         enrolled_courses = self.db.get_student_courses(student[0])  # student[0] is student_id
         enrolled_course_ids = {course[0] for course in enrolled_courses}
 
@@ -286,7 +288,7 @@ class StudentInterface(ttk.Frame):
                     messagebox.showerror("Error", "Student not found")
                     return
 
-                query = "DELETE FROM enrolls_in WHERE user_id = %s AND course_id = %s"
+                query = "DELETE FROM enrolls_in WHERE student_id = %s AND course_id = %s"
                 self.db.execute_query(query, (student[0], course_id))
                 messagebox.showinfo("Success", "Successfully dropped course!")
                 dialog.destroy()

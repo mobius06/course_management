@@ -10,6 +10,10 @@ class CourseManagementFrame(ttk.Frame):
         self.setup_ui()
 
     def setup_ui(self):
+        # Welcome label
+        welcome_label = ttk.Label(self, text=f"Welcome, {self.user.get('full_name', self.user.get('username', 'User'))}!", font=("Helvetica", 14, "bold"))
+        welcome_label.pack(pady=(10, 0))
+
         # Create main container
         self.main_container = ttk.Frame(self)
         self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -146,6 +150,11 @@ class CourseManagementFrame(ttk.Frame):
                 if not all([course_name_var.get(), course_code_var.get(), credits_var.get(), 
                           ects_var.get(), level_var.get(), type_var.get(), department_var.get()]):
                     messagebox.showerror("Error", "Please fill in all fields")
+                    return
+
+                # Check for duplicate course code
+                if self.db.check_course_code_exists(course_code_var.get()):
+                    messagebox.showerror("Error", "This course code already exists.")
                     return
 
                 # Get department ID
