@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from database import Database
+import datetime
 
 class UserManagementFrame(ttk.Frame):
     def __init__(self, parent, db, user, mode='user'):
@@ -283,9 +284,14 @@ class UserManagementFrame(ttk.Frame):
 
         # Display user details
         labels = ['User ID', 'Username', 'Role', 'Created At']
-        for row, (label, value) in enumerate(zip(labels, user)):
+
+        # Correctly map user data to labels, excluding sensitive info
+        user_details_for_display = (user[0], user[1], user[3], user[6]) # (user_id, username, role, created_at)
+
+        for row, (label, value) in enumerate(zip(labels, user_details_for_display)):
             ttk.Label(details_frame, text=f"{label}:", font=("Helvetica", 11, "bold")).grid(row=row, column=0, sticky=tk.W, pady=8, padx=4)
-            ttk.Label(details_frame, text=str(value), font=("Helvetica", 11)).grid(row=row, column=1, sticky=tk.W, pady=8, padx=4)
+            value_str = value.strftime("%Y-%m-%d %H:%M:%S") if isinstance(value, datetime.datetime) else str(value)
+            ttk.Label(details_frame, text=value_str, font=("Helvetica", 11)).grid(row=row, column=1, sticky=tk.W, pady=8, padx=4)
         details_frame.columnconfigure(1, weight=1)
 
         # Action buttons

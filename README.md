@@ -1,163 +1,180 @@
 # Course Management System
 
-A desktop course management system built with Python (Tkinter) and PostgreSQL, designed for educational institutions to manage courses, students, teachers, and enrollments.
+A comprehensive, GUI-based course management system developed with Python's Tkinter library and a PostgreSQL database. This system is designed for educational institutions to efficiently manage courses, students, teachers, departments, and enrollments through a role-based interface.
 
 ## Features
 
-- User authentication with role-based access (Admin, Teacher, Student)
-- Department management
-- Course management with ECTS credits and course types
-- Semester management
-- Course offering management
-- Student enrollment system
-- Teacher assignment to courses
+- **Role-Based Access Control:** Separate interfaces and permissions for Admins, Teachers, and Students.
+- **User Management (Admin):** Admins can add, edit, and delete user accounts for all roles.
+- **Department Management (Admin):** Admins can create and manage academic departments.
+- **Course Management (Admin/Teacher):** Admins can manage all courses, while teachers can manage courses within their own department.
+- **Semester & Course Offerings (Admin/Teacher):** Manage academic semesters and offer courses for specific semesters, assigning teachers to them.
+- **Student Enrollment (Student):** Students can view available courses and enroll in them based on their department and level.
+- **Dynamic GUI:** The user interface, built with `ttkthemes`, is intuitive and responsive.
 
 ## Prerequisites
 
-- **Python 3.8 or higher**
-- **PostgreSQL 12 or higher**
-- **pip** (Python package manager)
+- Python 3.8 or higher
+- PostgreSQL 12 or higher
 
 ## Installation & Setup
 
-### 1. Install Python and pip
-- Download and install Python from [python.org](https://www.python.org/downloads/).
-- Make sure to check "Add Python to PATH" during installation.
-- pip is included with modern Python versions.
+1.  **Clone the Repository:**
+    ```bash
+    git clone <repository-url>
+    cd course_management
+    ```
 
-### 2. Install PostgreSQL
-- Download and install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/).
-- During installation, set a password for the `postgres` superuser and remember it.
+2.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-### 3. Clone the repository
-```bash
-git clone <repository-url>
-cd course_management
-```
+3.  **Set Up PostgreSQL Database:**
+    -   Log in to PostgreSQL: `psql -U postgres`
+    -   Create a database and a user (replace with your own credentials):
+        ```sql
+        CREATE DATABASE course_management;
+        CREATE USER your_username WITH PASSWORD 'your_password';
+        GRANT ALL PRIVILEGES ON DATABASE course_management TO your_username;
+        \q
+        ```
+    -   Run the setup script to create tables and insert sample data:
+        ```bash
+        psql -d course_management -U your_username -f database_setup.sql
+        ```
 
-### 4. Install required Python packages
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Set up the PostgreSQL database
-- Open a terminal/command prompt and run:
-```bash
-psql -U postgres
-```
-- Create the database and user (replace `your_username` and `your_password`):
-```sql
-CREATE DATABASE course_management;
-CREATE USER your_username WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE course_management TO your_username;
-\q
-```
-- Run the database setup script:
-```bash
-psql -d course_management -U your_username -f database_setup.sql
-```
-
-### 6. Configure the application
-- Open `config.py` in a text editor.
-- Set your database credentials:
-```python
-DB_CONFIG = {
-    'dbname': 'course_management',
-    'user': 'your_username',
-    'password': 'your_password',
-    'host': 'localhost',
-    'port': '5432'
-}
-```
+4.  **Configure the Application:**
+    -   Create a file named `config.py` in the root directory.
+    -   Add the following dictionary with your database credentials:
+        ```python
+        DB_CONFIG = {
+            'dbname': 'course_management',
+            'user': 'your_username',
+            'password': 'your_password',
+            'host': 'localhost',
+            'port': '5432' # also check your port number
+        }
+        ```
 
 ## Running the Application
 
-Start the desktop application:
+To start the system, run the following command from the project's root directory:
 ```bash
 python main.py
 ```
-The application window will open for login and management.
+This will open the login window.
 
 ---
 
 ## How to Use the Course Management System
 
-### 1. Login
-- Launch the application and enter your username and password.
-- Default users: admin, teacher1, teacher2, teacher_math, teacher_ee, student1, student2 (all password123).
-- Click Login.
+The system provides different functionalities based on the user's role. Here are the default credentials for initial login:
+- **Admin:** `admin` / `password123`
+- **Teachers:** `teacher1` / `password123`, `teacher2` / `password123`
+- **Students:** `student1` / `password123`, `student2` / `password123`
 
-### 2. Admin Panel
-- **User Management:** Add, edit, or delete users (students, teachers, admins).
-- **Department Management:** Add, edit, or remove departments. (departments with student and course records cannot be deleted)
-- **Course Management:** Add, edit, or delete courses. Deleting a course removes all related offerings/enrollments.
-- **Semester Management:** Add, edit, or remove semesters (e.g., "2024-2025 Spring").
-- **Course Offerings:** Assign courses to semesters and teachers.
+### 1. Admin Interface
 
-### 3. Teacher Panel
-- **Teaching Courses Tab:** View, add, edit, or refresh courses you offer. Edit all course details for your department's courses.
-- **Course Offerings Tab:** View, add, edit, or delete course offerings for your courses in specific semesters.
+The admin has full control over the system through a tabbed interface.
 
-### 4. Student Panel
-- **Available Courses Tab:** View and enroll in eligible courses for the current semester. See instructor names. Cannot enroll in previous semester courses.
-- **Enrolled Courses Tab:** View and drop courses you are enrolled in.
+#### **Users Tab**
+- **View Users:** A list of all users (admins, teachers, students) is displayed with their ID, username, role, and creation date.
+- **Add a New User:**
+    1.  Click the "Add User" button.
+    2.  Fill in the user's details: username, password, role, first name, and last name.
+    3.  If the role is "Student" or "Teacher," additional fields for department, email, etc., will appear. Fill these in.
+    4.  Click "Save" to create the user.
+- **Edit or Delete a User:**
+    1.  Double-click on a user in the list to open the details view.
+    2.  Click "Edit" to open the edit form. You can update the username, role, name, and set a new password.
+    3.  Click "Delete" to permanently remove the user.
 
-### 5. General Rules
-- Students can only enroll in courses offered in the current semester and matching their level.
-- Students can take all course types in their department, but only Elective/Technical Elective from other departments.
-- Teachers can only offer/edit courses from their own department.
-- Deleting a course, teacher, or student will automatically remove all related offerings/enrollments.
+#### **Departments Tab**
+- **View Departments:** Shows a list of all academic departments.
+- **Add a Department:**
+    1.  Click "Add Department."
+    2.  Enter the department name and click "Save."
+- **Edit a Department:**
+    1.  Select a department from the list.
+    2.  Click "Edit Department."
+    3.  Modify the name and click "Save Changes."
+- **Delete a Department:**
+    1.  Select a department from the list.
+    2.  Click "Delete Department" and confirm the action.
 
-### 6. Troubleshooting
-- If you see errors about foreign key constraints, ensure you are not deleting referenced items or that cascade deletes are set up.
-- If you get a "transaction aborted" error, restart the application.
+### 2. Teacher Interface
 
-### 7. Logging Out
-- Click the "Logout" button at the bottom of the window to return to the login screen.
+Teachers manage their courses and course offerings.
+
+#### **Teaching Courses Tab**
+This tab displays the courses the logged-in teacher is assigned to teach, grouped by semester.
+- **Add a New Course:**
+    1.  Click "Add Course."
+    2.  Fill in the course details: name, code, credits, ECTS, level, and type. The department is automatically set to the teacher's department.
+    3.  Click "Save."
+- **Edit a Course:**
+    1.  Select a course from the list.
+    2.  Click "Edit Course."
+    3.  Modify the course details and save the changes. Teachers can only edit courses within their own department.
+
+#### **Course Offerings Tab**
+This tab allows teachers to manage which courses are offered in which semester.
+- **View Course Offerings:** Displays a list of all courses offered across all departments and semesters.
+- **Add a Course Offering:**
+    1.  Click "Add Course Offering."
+    2.  Select a course and a semester from the dropdown menus. The instructor is automatically set to you.
+    3.  Click "Save Offering." This makes the course available for student enrollment in that semester.
+- **Remove a Course Offering:**
+    1.  Select a course offering from the list.
+    2.  Click "Remove Offering" and confirm.
+
+### 3. Student Interface
+
+Students can browse and enroll in courses.
+
+#### **Available Courses Tab**
+- **View Available Courses:** Shows a list of courses offered in the current semester that the student is eligible to enroll in. This includes the course details and the instructor's name.
+- **Enroll in a Course:**
+    1.  Double-click on a course in the "Available Courses" list.
+    2.  A dialog with course details will appear.
+    3.  Click "Enroll in Course" to register for it. The course will then move to your "Enrolled Courses" tab.
+
+#### **Enrolled Courses Tab**
+- **View Enrolled Courses:** Displays a list of all courses the student is currently enrolled in.
+- **Drop a Course:**
+    1.  Double-click on a course in the "Enrolled Courses" list.
+    2.  In the details dialog, click "Drop Course" and confirm. The course will be removed from your list and will reappear in the "Available Courses" tab if the enrollment period is still active.
+
+### Logging Out
+- At any point, a user can click the "Logout" button at the bottom of the window to return to the login screen.
 
 ---
-
-## Default Users
-
-The system comes with the following default users:
-
-1. Admin:
-   - Username: `admin`
-   - Password: `password123`
-
-2. Teachers:
-   - Username: `teacher1`, Password: `password123`
-   - Username: `teacher2`, Password: `password123`
-   - Username: `teacher_math`, Password: `password123`
-   - Username: `teacher_ee`, Password: `password123`
-
-3. Students:
-   - Username: `student1`, Password: `password123`
-   - Username: `student2`, Password: `password123`
-
 ## Project Structure
 
 ```
 course_management/
-  database_setup.sql
-  database.py
-  config.py
-  main.py
-  requirements.txt
-  README.md
-  gui/
-    course_management.py
-    student_interface.py
-    teacher_interface.py
-    user_management.py
+  ├── database.py
+  ├── database_setup.sql
+  ├── main.py
+  ├── requirements.txt
+  ├── README.md
+  ├── config.py
+  └── gui/
+      ├── course_management.py
+      ├── student_interface.py
+      ├── teacher_interface.py
+      └── user_management.py
 ```
-
-- `database_setup.sql`: Database schema and sample data
-- `database.py`: Database access and logic
-- `config.py`: Database connection configuration
-- `main.py`: Main entry point for the desktop GUI
-- `requirements.txt`: Python dependencies
-- `gui/`: GUI modules for different user roles
+- `main.py`: The entry point of the application. Handles login and navigation.
+- `database.py`: Manages all database connections and queries.
+- `database_setup.sql`: SQL script to initialize the database schema and sample data.
+- `config.py`: Contains the database connection configuration.
+- `gui/`: A package containing all the UI modules.
+  - `user_management.py`: Admin's interface for managing users and departments.
+  - `course_management.py`: Admin's interface for managing all courses.
+  - `teacher_interface.py`: Teacher's interface for managing their courses and offerings.
+  - `student_interface.py`: Student's interface for enrolling in courses.
 
 ## Database Structure
 
